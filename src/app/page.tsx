@@ -1,65 +1,173 @@
-import Image from "next/image";
+"use client";
+
+import { Suspense, useCallback, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { PreSession } from "@/components/PreSession";
+import { ActiveSession } from "@/components/ActiveSession";
+import { AnalyzingTransition } from "@/components/AnalyzingTransition";
+import { ScoreCard } from "@/components/ScoreCard";
+import { DEFAULT_BACKGROUND_KEY } from "@/config/backgrounds";
+import { DEFAULT_PERSONA } from "@/lib/defaultPersona";
+import type {
+  Persona,
+  ScoringResult,
+  Screen,
+  TranscriptLine,
+} from "@/lib/types";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <Suspense fallback={null}>
+      <HomeInner />
+    </Suspense>
+  );
+}
+
+function HomeInner() {
+  const searchParams = useSearchParams();
+  const debug = searchParams?.get("debug") === "1";
+
+  const [screen, setScreen] = useState<Screen>("pre-session");
+  const [persona] = useState<Persona>(DEFAULT_PERSONA);
+  const [selectedBackground, setSelectedBackground] = useState<string>(
+    DEFAULT_BACKGROUND_KEY,
+  );
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
+  const [durationSeconds, setDurationSeconds] = useState(0);
+  const [endedReason, setEndedReason] = useState<string>("user_ended");
+  const [scoreData, setScoreData] = useState<ScoringResult | null>(null);
+  const [scoringError, setScoringError] = useState<string | null>(null);
+
+  const handleStart = useCallback(async () => {
+    const res = await fetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Unknown error" }));
+      throw new Error(err.error || `Session start failed (HTTP ${res.status})`);
+    }
+    const { session_token } = (await res.json()) as { session_token: string };
+    setSessionToken(session_token);
+    setScreen("active");
+  }, []);
+
+  const handleSessionEnd = useCallback(
+    ({
+      transcript: t,
+      durationSeconds: dur,
+      endedReason: reason,
+    }: {
+      transcript: TranscriptLine[];
+      durationSeconds: number;
+      endedReason: "user_ended" | "max_duration" | "disconnected";
+    }) => {
+      setTranscript(t);
+      setDurationSeconds(dur);
+      setEndedReason(reason);
+      setScreen("analyzing");
+    },
+    [],
+  );
+
+  const handleScoringComplete = useCallback((result: ScoringResult) => {
+    setScoreData(result);
+    setScreen("score");
+  }, []);
+
+  const handleScoringError = useCallback((err: string) => {
+    setScoringError(err);
+    // Synthesize a minimal scoring result so the UI still has something
+    // to show. Real prod would surface a "scoring unavailable" view.
+    setScoreData({
+      scores: {
+        understandingTheMoment: 0,
+        exploringTogether: 0,
+        guidingTheDecision: 0,
+        emotionalConnection: 0,
+        culturalRelevance: 0,
+        productKnowledge: 0,
+      },
+      overall_score: 0,
+      stars: 1,
+      highlights: [],
+      summary: `Scoring is unavailable right now. ${err}`,
+      recommendedNextFeedback:
+        "Try the session again once the scoring service is reachable.",
+    });
+    setScreen("score");
+  }, []);
+
+  const handleTryAgain = useCallback(() => {
+    setScreen("pre-session");
+    setSessionToken(null);
+    setTranscript([]);
+    setDurationSeconds(0);
+    setEndedReason("user_ended");
+    setScoreData(null);
+    setScoringError(null);
+  }, []);
+
+  if (screen === "pre-session") {
+    return (
+      <PreSession
+        persona={persona}
+        selectedBackground={selectedBackground}
+        onBackgroundChange={setSelectedBackground}
+        onStart={handleStart}
+      />
+    );
+  }
+
+  if (screen === "active" && sessionToken) {
+    return (
+      <ActiveSession
+        sessionToken={sessionToken}
+        selectedBackground={selectedBackground}
+        onBackgroundChange={setSelectedBackground}
+        onSessionEnd={handleSessionEnd}
+        debug={debug}
+      />
+    );
+  }
+
+  if (screen === "analyzing") {
+    return (
+      <AnalyzingTransition
+        transcript={transcript}
+        persona={persona}
+        durationSeconds={durationSeconds}
+        endedReason={endedReason}
+        onComplete={handleScoringComplete}
+        onError={handleScoringError}
+      />
+    );
+  }
+
+  if (screen === "score" && scoreData) {
+    return (
+      <>
+        {scoringError && (
+          <div className="bg-coach-mahogany/30 text-coach-cream text-[12px] px-4 py-2 text-center">
+            {scoringError}
+          </div>
+        )}
+        <ScoreCard
+          result={scoreData}
+          persona={persona}
+          durationSeconds={durationSeconds}
+          onTryAgain={handleTryAgain}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </>
+    );
+  }
+
+  // Fallback (e.g. active screen without token).
+  return (
+    <main className="flex-1 flex items-center justify-center">
+      <p className="text-coach-cream/60">Loading…</p>
+    </main>
   );
 }
