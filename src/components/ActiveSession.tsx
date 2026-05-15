@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SessionState } from "@heygen/liveavatar-web-sdk";
 import { ChromaKeyVideo } from "./ChromaKeyVideo";
-import { BackgroundPicker } from "./BackgroundPicker";
 import { LiveAvatarContextProvider, useSession } from "@/liveavatar";
-import { backgrounds, DEFAULT_BACKGROUND_KEY } from "@/config/backgrounds";
+import { BACKGROUND } from "@/config/backgrounds";
 import {
   DEFAULT_CHROMA_KEY_OPTIONS,
   type ChromaKeyOptions,
@@ -16,8 +15,6 @@ const MAX_SESSION_SECONDS = 10 * 60;
 
 type ActiveSessionProps = {
   sessionToken: string;
-  selectedBackground: string;
-  onBackgroundChange: (key: string) => void;
   onSessionEnd: (info: {
     transcript: TranscriptLine[];
     durationSeconds: number;
@@ -36,12 +33,7 @@ export function ActiveSession(props: ActiveSessionProps) {
   );
 }
 
-function ActiveSessionInner({
-  selectedBackground,
-  onBackgroundChange,
-  onSessionEnd,
-  debug = false,
-}: ActiveSessionProps) {
+function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps) {
   const {
     sessionState,
     isStreamReady,
@@ -90,7 +82,6 @@ function ActiveSessionInner({
   // External disconnect.
   useEffect(() => {
     if (sessionState === SessionState.DISCONNECTED && startedRef.current && !endedRef.current) {
-      // If we haven't ended ourselves yet but the room disconnected, bubble up.
       endedRef.current = true;
       onSessionEnd({
         transcript: transcriptRef.current,
@@ -118,20 +109,13 @@ function ActiveSessionInner({
     });
   };
 
-  const currentBg = useMemo(
-    () =>
-      backgrounds.find((b) => b.key === selectedBackground) ??
-      backgrounds.find((b) => b.key === DEFAULT_BACKGROUND_KEY)!,
-    [selectedBackground],
-  );
-
-  const bgStyle: React.CSSProperties = currentBg.image
+  const bgStyle: React.CSSProperties = BACKGROUND.image
     ? {
-        backgroundImage: `url(${currentBg.image})`,
+        backgroundImage: `url(${BACKGROUND.image})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }
-    : { backgroundColor: currentBg.color || "#1C1917" };
+    : { backgroundColor: BACKGROUND.color || "#1C1917" };
 
   const minutes = Math.floor(elapsed / 60).toString().padStart(2, "0");
   const seconds = (elapsed % 60).toString().padStart(2, "0");
@@ -151,7 +135,7 @@ function ActiveSessionInner({
 
       {/* Avatar layer */}
       <div className="absolute inset-0 z-10">
-        <ChromaKeyVideo offset={currentBg.avatarOffset} chromaOptions={chromaOptions} />
+        <ChromaKeyVideo offset={BACKGROUND.avatarOffset} chromaOptions={chromaOptions} />
       </div>
 
       {/* Connecting overlay */}
@@ -172,9 +156,7 @@ function ActiveSessionInner({
         <span className="text-coach-cream font-medium tabular-nums text-[14px]">
           {minutes}:{seconds}
         </span>
-        <span className="text-coach-cream/40 text-[11px]">
-          / 10:00
-        </span>
+        <span className="text-coach-cream/40 text-[11px]">/ 10:00</span>
       </div>
 
       {/* Top-left Coach Pulse logo */}
@@ -185,15 +167,6 @@ function ActiveSessionInner({
         <p className="text-coach-cream/50 text-[10px] tracking-wider mt-0.5">
           Practice in progress
         </p>
-      </div>
-
-      {/* Background picker — floating */}
-      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20">
-        <BackgroundPicker
-          selectedKey={selectedBackground}
-          onChange={onBackgroundChange}
-          variant="floating"
-        />
       </div>
 
       {/* End session button */}

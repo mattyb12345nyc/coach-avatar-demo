@@ -1,22 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { BackgroundPicker } from "./BackgroundPicker";
 import type { Persona } from "@/lib/types";
 
 type PreSessionProps = {
   persona: Persona;
-  selectedBackground: string;
-  onBackgroundChange: (key: string) => void;
   onStart: () => Promise<void> | void;
 };
 
-export function PreSession({
-  persona,
-  selectedBackground,
-  onBackgroundChange,
-  onStart,
-}: PreSessionProps) {
+export function PreSession({ persona, onStart }: PreSessionProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,16 +57,6 @@ export function PreSession({
           <p className="mt-4 text-left text-coach-cream/80 text-[14px] leading-[1.55]">
             {persona.scenario}
           </p>
-        </section>
-
-        <section className="flex flex-col items-center gap-3">
-          <p className="text-coach-cream/60 text-[12px] tracking-wider uppercase">
-            Background
-          </p>
-          <BackgroundPicker
-            selectedKey={selectedBackground}
-            onChange={onBackgroundChange}
-          />
         </section>
 
         <div className="inline-flex items-center gap-2 rounded-full border border-coach-cream/15 px-4 py-1.5">

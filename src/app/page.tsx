@@ -6,7 +6,6 @@ import { PreSession } from "@/components/PreSession";
 import { ActiveSession } from "@/components/ActiveSession";
 import { AnalyzingTransition } from "@/components/AnalyzingTransition";
 import { ScoreCard } from "@/components/ScoreCard";
-import { DEFAULT_BACKGROUND_KEY } from "@/config/backgrounds";
 import { DEFAULT_PERSONA } from "@/lib/defaultPersona";
 import type {
   Persona,
@@ -29,9 +28,6 @@ function HomeInner() {
 
   const [screen, setScreen] = useState<Screen>("pre-session");
   const [persona] = useState<Persona>(DEFAULT_PERSONA);
-  const [selectedBackground, setSelectedBackground] = useState<string>(
-    DEFAULT_BACKGROUND_KEY,
-  );
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [durationSeconds, setDurationSeconds] = useState(0);
@@ -112,12 +108,7 @@ function HomeInner() {
 
   if (screen === "pre-session") {
     return (
-      <PreSession
-        persona={persona}
-        selectedBackground={selectedBackground}
-        onBackgroundChange={setSelectedBackground}
-        onStart={handleStart}
-      />
+      <PreSession persona={persona} onStart={handleStart} />
     );
   }
 
@@ -125,8 +116,6 @@ function HomeInner() {
     return (
       <ActiveSession
         sessionToken={sessionToken}
-        selectedBackground={selectedBackground}
-        onBackgroundChange={setSelectedBackground}
         onSessionEnd={handleSessionEnd}
         debug={debug}
       />
