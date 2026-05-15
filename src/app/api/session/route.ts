@@ -64,8 +64,9 @@ export async function POST(request: NextRequest) {
           quality: "high",
           encoding: "H264",
         },
-        // Sandbox mode = no credit burn for demos. Flip to false for prod.
-        is_sandbox: true,
+        // Avatar 63014563-... requires production mode (sandbox unsupported).
+        // This burns HeyGen credits per session — fine for a demo.
+        is_sandbox: false,
       }),
     });
 
