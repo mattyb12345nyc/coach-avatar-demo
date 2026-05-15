@@ -139,7 +139,7 @@ function HomeInner() {
     return (
       <>
         {scoringError && (
-          <div className="bg-coach-mahogany/30 text-coach-cream text-[12px] px-4 py-2 text-center">
+          <div className="bg-pulse-warning-tint text-pulse-neutral-dark font-pulse-body text-[12px] px-4 py-2 text-center border-b border-pulse-stroke">
             {scoringError}
           </div>
         )}
@@ -155,8 +155,8 @@ function HomeInner() {
 
   // Fallback (e.g. active screen without token).
   return (
-    <main className="flex-1 flex items-center justify-center">
-      <p className="text-coach-cream/60">Loading…</p>
+    <main className="flex-1 flex items-center justify-center bg-coach-cream">
+      <p className="font-pulse-body text-pulse-neutral-1">Loading…</p>
     </main>
   );
 }

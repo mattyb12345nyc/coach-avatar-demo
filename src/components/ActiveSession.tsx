@@ -12,6 +12,7 @@ import {
 } from "@/lib/types";
 
 const MAX_SESSION_SECONDS = 10 * 60;
+const COUNTDOWN_START = 12;
 
 type ActiveSessionProps = {
   sessionToken: string;
@@ -24,8 +25,6 @@ type ActiveSessionProps = {
 };
 
 export function ActiveSession(props: ActiveSessionProps) {
-  // Mount the LiveAvatar context only once per session token. Re-mounting
-  // would spin up a new LiveKit room each render.
   return (
     <LiveAvatarContextProvider sessionAccessToken={props.sessionToken}>
       <ActiveSessionInner {...props} />
@@ -43,7 +42,7 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
   } = useSession();
 
   const [elapsed, setElapsed] = useState(0);
-  const [countdown, setCountdown] = useState(12);
+  const [countdown, setCountdown] = useState(COUNTDOWN_START);
   const startedRef = useRef(false);
   const endedRef = useRef(false);
   const transcriptRef = useRef<TranscriptLine[]>([]);
@@ -55,7 +54,6 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
     transcriptRef.current = transcript;
   }, [transcript]);
 
-  // Kick off the session on mount.
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
@@ -64,31 +62,24 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
     });
   }, [startSession]);
 
-  // Timer.
   useEffect(() => {
     if (!isStreamReady) return;
-    const t = setInterval(() => {
-      setElapsed((e) => e + 1);
-    }, 1000);
+    const t = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(t);
   }, [isStreamReady]);
 
-  // 7-second loading countdown. Ticks while the stream isn't ready yet.
   useEffect(() => {
-    if (isStreamReady) return;
-    if (countdown <= 0) return;
+    if (isStreamReady || countdown <= 0) return;
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown, isStreamReady]);
 
-  // Max duration enforcement.
   useEffect(() => {
     if (elapsed >= MAX_SESSION_SECONDS && !endedRef.current) {
       endSession("max_duration");
     }
   }, [elapsed]);
 
-  // External disconnect.
   useEffect(() => {
     if (sessionState === SessionState.DISCONNECTED && startedRef.current && !endedRef.current) {
       endedRef.current = true;
@@ -124,7 +115,7 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
         backgroundSize: "cover",
         backgroundPosition: "center",
       }
-    : { backgroundColor: BACKGROUND.color || "#1C1917" };
+    : { backgroundColor: "var(--color-coach-black)" };
 
   const minutes = Math.floor(elapsed / 60).toString().padStart(2, "0");
   const seconds = (elapsed % 60).toString().padStart(2, "0");
@@ -137,84 +128,93 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-coach-black">
-      {/* Background layer */}
+      {/* Background image */}
       <div className="absolute inset-0 z-0" style={bgStyle} />
-      {/* Subtle dark wash to keep text legible against busy bg */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-coach-black/30 via-transparent to-coach-black/60" />
+      {/* Subtle dark wash for legibility */}
+      <div
+        className="absolute inset-0 z-[1]"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.45) 100%)",
+        }}
+      />
 
-      {/* Avatar layer */}
+      {/* Avatar */}
       <div className="absolute inset-0 z-10">
         <ChromaKeyVideo offset={BACKGROUND.avatarOffset} chromaOptions={chromaOptions} />
       </div>
 
-      {/* Connecting overlay */}
+      {/* Connecting overlay — Coach Pulse cream card with black countdown ring */}
       {isConnecting && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-coach-black/75 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-6">
-            <div className="relative w-24 h-24 flex items-center justify-center">
-              <svg className="absolute inset-0 w-24 h-24 -rotate-90" aria-hidden>
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-coach-black/60 backdrop-blur-sm">
+          <div className="rounded-pulse-card bg-pulse-paper shadow-pulse-card px-10 py-9 flex flex-col items-center gap-6 max-w-[360px] mx-6">
+            <p className="font-pulse-ext text-[9px] tracking-[0.24em] uppercase font-medium text-pulse-meta">
+              Coach Pulse
+            </p>
+            <div className="relative w-[112px] h-[112px] flex items-center justify-center">
+              <svg className="absolute inset-0 w-[112px] h-[112px] -rotate-90" aria-hidden>
                 <circle
-                  cx="48"
-                  cy="48"
-                  r="42"
-                  stroke="rgba(245, 240, 235, 0.12)"
-                  strokeWidth="3"
+                  cx="56"
+                  cy="56"
+                  r="48"
+                  stroke="var(--color-pulse-stroke)"
+                  strokeWidth="6"
                   fill="none"
                 />
                 <circle
-                  cx="48"
-                  cy="48"
-                  r="42"
-                  stroke="#C9A227"
-                  strokeWidth="3"
+                  cx="56"
+                  cy="56"
+                  r="48"
+                  stroke="var(--color-coach-black)"
+                  strokeWidth="6"
                   fill="none"
-                  strokeDasharray={2 * Math.PI * 42}
-                  strokeDashoffset={(2 * Math.PI * 42) * (countdown / 12)}
                   strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 48}
+                  strokeDashoffset={(2 * Math.PI * 48) * (countdown / COUNTDOWN_START)}
                   style={{ transition: "stroke-dashoffset 1s linear" }}
                 />
               </svg>
-              <span className="text-coach-cream text-[32px] font-medium tabular-nums">
+              <span className="font-pulse-ext text-[32px] font-medium tabular-nums text-pulse-primary">
                 {Math.max(0, countdown)}
               </span>
             </div>
-            <div className="flex flex-col items-center gap-1.5">
-              <p className="text-coach-cream text-[14px] tracking-[0.2em] uppercase font-medium">
+            <div className="flex flex-col items-center gap-1 text-center">
+              <p className="font-bembo text-[20px] leading-[1.2] text-pulse-primary">
                 Connecting your practice partner
               </p>
-              <p className="text-coach-cream/60 text-[12px]">
-                {countdown > 0 ? `Ready in ${countdown}s` : "Almost there..."}
+              <p className="font-pulse-body text-[13px] text-pulse-neutral-1">
+                {countdown > 0 ? `Ready in ${countdown}s` : "Almost there…"}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Top-right timer */}
-      <div className="absolute top-6 right-6 z-20 flex items-center gap-2 rounded-full bg-coach-black/50 backdrop-blur-md px-4 py-2 border border-coach-cream/15">
-        <span className="w-1.5 h-1.5 rounded-full bg-coach-gold animate-pulse" />
-        <span className="text-coach-cream font-medium tabular-nums text-[14px]">
-          {minutes}:{seconds}
-        </span>
-        <span className="text-coach-cream/40 text-[11px]">/ 10:00</span>
-      </div>
-
-      {/* Top-left Coach Pulse logo */}
-      <div className="absolute top-6 left-6 z-20">
-        <p className="text-coach-cream text-[12px] tracking-[0.3em] uppercase font-medium">
+      {/* Top-left: Coach Pulse logo */}
+      <div className="absolute top-6 left-6 z-20 flex flex-col gap-0.5">
+        <p className="font-pulse-ext text-[10px] tracking-[0.24em] uppercase font-medium text-coach-cream">
           Coach Pulse
         </p>
-        <p className="text-coach-cream/50 text-[10px] tracking-wider mt-0.5">
+        <p className="font-pulse-body text-[10px] text-coach-cream/65 tracking-wider">
           Practice in progress
         </p>
       </div>
 
-      {/* End session button */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+      {/* Top-right: timer pill (white-on-translucent) */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-2 rounded-pulse-pill bg-pulse-paper px-4 py-2 shadow-pulse-soft">
+        <span className="w-1.5 h-1.5 rounded-full bg-coach-black" />
+        <span className="font-pulse-ext text-[13px] font-medium tabular-nums text-pulse-primary">
+          {minutes}:{seconds}
+        </span>
+        <span className="font-pulse-body text-[11px] text-pulse-neutral">/ 10:00</span>
+      </div>
+
+      {/* Bottom-center: end session — black-filled CTA */}
+      <div className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20">
         <button
           type="button"
           onClick={() => endSession("user_ended")}
-          className="inline-flex items-center justify-center rounded-full border border-coach-gold px-8 py-3 text-coach-cream text-[13px] font-medium tracking-[0.08em] uppercase bg-transparent hover:bg-coach-gold hover:text-coach-black transition-colors"
+          className="inline-flex items-center justify-center rounded-pulse-pill bg-coach-black text-coach-cream font-pulse-ext text-[12px] font-medium tracking-[0.12em] uppercase px-10 py-3.5 shadow-pulse-card hover:opacity-90 active:scale-[0.99] transition-all"
         >
           End session
         </button>
@@ -222,7 +222,7 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
 
       {/* Debug chroma sliders */}
       {debug && (
-        <div className="absolute top-20 right-6 z-30 bg-coach-black/80 border border-coach-cream/20 rounded-lg p-4 text-coach-cream text-xs space-y-2 w-64">
+        <div className="absolute top-20 right-6 z-30 bg-pulse-paper border border-pulse-stroke rounded-pulse-tile p-4 text-pulse-primary text-xs space-y-2 w-64 shadow-pulse-card font-pulse-body">
           <p className="font-medium mb-2">Chroma key tuning</p>
           <label className="block">
             min hue: {chromaOptions.minHue}
@@ -256,7 +256,7 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
               className="w-full"
             />
           </label>
-          <p className="text-coach-cream/40 mt-2">elapsed {elapsed}s · remaining {Math.floor(remaining / 60)}:{(remaining % 60).toString().padStart(2, "0")}</p>
+          <p className="text-pulse-neutral mt-2">elapsed {elapsed}s · remaining {Math.floor(remaining / 60)}:{(remaining % 60).toString().padStart(2, "0")}</p>
         </div>
       )}
     </div>

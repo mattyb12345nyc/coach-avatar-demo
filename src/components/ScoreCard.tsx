@@ -22,7 +22,7 @@ type ScoreCardProps = {
   onTryAgain: () => void;
 };
 
-const ZONE_ICON: Record<string, React.ComponentType<{ size?: number }>> = {
+const ZONE_ICON: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   understandingTheMoment: Eye,
   exploringTogether: Users,
   guidingTheDecision: Compass,
@@ -49,7 +49,6 @@ export function ScoreCard({
   const overall = Math.round(result.overall_score);
   const stars = Math.max(1, Math.min(5, result.stars || 1));
 
-  // Normalize highlights — accept either tagged objects or plain strings.
   const highlights = (result.highlights || []) as
     | Array<{ type?: string; text?: string }>
     | string[];
@@ -65,117 +64,145 @@ export function ScoreCard({
   }
 
   return (
-    <main className="flex-1 bg-coach-black overflow-y-auto">
-      <div className="mx-auto w-full max-w-[720px] px-6 py-12 flex flex-col gap-8">
-        <header className="text-center flex flex-col gap-2">
-          <p className="text-coach-gold text-[12px] tracking-[0.3em] uppercase font-medium">
-            Session complete
-          </p>
-          <h1 className="text-coach-cream text-[28px] font-medium leading-[1.2]">
-            Here's how the conversation landed
-          </h1>
-          <p className="text-coach-cream/60 text-[13px] uppercase tracking-wider">
-            {new Date().toLocaleDateString(undefined, {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </p>
-        </header>
+    <div className="flex-1 flex flex-col bg-coach-cream">
+      {/* Black hero header */}
+      <header className="bg-coach-black text-coach-cream px-6 pt-12 pb-12 text-center">
+        <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase font-medium text-coach-cream/75">
+          Session complete
+        </p>
+        <h1
+          className="mt-3 font-bembo text-[28px] leading-[1.1] font-normal"
+          style={{ letterSpacing: "-0.005em" }}
+        >
+          Here&apos;s how the conversation landed.
+        </h1>
+        <p className="mt-3 font-pulse-body text-[13px] text-coach-cream/65">
+          {new Date().toLocaleDateString(undefined, {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        </p>
+      </header>
 
-        <section className="flex flex-col items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-coach-gold/15 border border-coach-gold/50 flex items-center justify-center text-coach-gold text-[18px] font-medium">
-            {persona.name.charAt(0)}
-          </div>
-          <p className="text-coach-cream text-[18px] font-medium">
-            {persona.name}
-            {persona.age ? `, ${persona.age}` : ""}
-          </p>
-
-          <div className="grid grid-cols-2 gap-3 w-full">
-            <ScoreRing
-              label="Session Score"
-              value={`${overall}%`}
-              pct={overall}
-              stars={stars}
-            />
-            <ScoreRing
-              label="Time Elapsed"
-              value={formatElapsed(durationSeconds)}
-              pct={null}
-            />
-          </div>
-        </section>
-
-        <CategorySection
-          title="Engagement Zones"
-          categories={ENGAGEMENT_ZONES}
-          scores={result.scores}
-          iconFor={(c) => ZONE_ICON[c.key] ?? Eye}
-        />
-
-        <CategorySection
-          title="Foundational Skills"
-          categories={FOUNDATIONAL_SKILLS}
-          scores={result.scores}
-          iconFor={(c) => skillIcon(c.key)}
-        />
-
-        {result.summary && (
-          <section className="flex flex-col gap-2">
-            <h2 className="text-coach-cream/60 text-[11px] tracking-[0.25em] uppercase">
-              Coach feedback
-            </h2>
-            <div className="rounded-2xl border border-coach-cream/10 bg-coach-cream/[0.04] p-5">
-              <p className="text-coach-cream/90 text-[15px] leading-[1.6] whitespace-pre-line">
-                {result.summary}
+      {/* Cream container with rounded-top overlap */}
+      <main className="flex-1 bg-coach-cream rounded-t-3xl -mt-6 px-5 pt-8 pb-16">
+        <div className="mx-auto w-full max-w-[640px] flex flex-col gap-8">
+          {/* Persona + score trio */}
+          <section className="flex flex-col items-center gap-4">
+            {persona.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={persona.image}
+                alt={persona.name}
+                className="w-[60px] h-[60px] rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-[60px] h-[60px] rounded-full bg-coach-black flex items-center justify-center text-coach-cream font-pulse-ext text-[18px] font-medium">
+                {persona.name.charAt(0)}
+              </div>
+            )}
+            <div className="text-center">
+              <p className="font-pulse-body text-[17px] font-medium text-pulse-primary">
+                {persona.name}
+                {persona.age ? `, ${persona.age}` : ""}
               </p>
+              {persona.type && (
+                <p className="font-pulse-ext text-[9px] tracking-[0.22em] uppercase font-medium text-pulse-meta mt-1">
+                  {persona.type}
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 w-full mt-2">
+              <ScoreRing
+                label="Session Score"
+                value={`${overall}%`}
+                pct={overall}
+                stars={stars}
+              />
+              <ScoreRing
+                label="Time Elapsed"
+                value={formatElapsed(durationSeconds)}
+                pct={null}
+              />
             </div>
           </section>
-        )}
 
-        {(strengths.length > 0 || improvements.length > 0) && (
-          <section className="flex flex-col gap-2">
-            <h2 className="text-coach-cream/60 text-[11px] tracking-[0.25em] uppercase">
-              Key moments
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {strengths.map((text, i) => (
-                <HighlightCard key={`s-${i}`} kind="strength" text={text} />
-              ))}
-              {improvements.map((text, i) => (
-                <HighlightCard
-                  key={`i-${i}`}
-                  kind="improvement"
-                  text={text}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+          <CategorySection
+            title="Engagement Zones"
+            categories={ENGAGEMENT_ZONES}
+            scores={result.scores}
+            iconFor={(c) => ZONE_ICON[c.key] ?? Eye}
+          />
 
-        {result.recommendedNextFeedback && (
-          <section className="rounded-2xl border border-coach-gold/30 bg-coach-gold/[0.06] p-5">
-            <p className="text-coach-gold text-[11px] tracking-[0.25em] uppercase mb-2">
-              Recommended next
-            </p>
-            <p className="italic text-coach-cream/90 text-[15px] leading-[1.55]">
-              {result.recommendedNextFeedback}
-            </p>
-          </section>
-        )}
+          <CategorySection
+            title="Foundational Skills"
+            categories={FOUNDATIONAL_SKILLS}
+            scores={result.scores}
+            iconFor={(c) => skillIcon(c.key)}
+          />
 
-        <div className="flex justify-center pt-4">
-          <button
-            type="button"
-            onClick={onTryAgain}
-            className="inline-flex items-center justify-center rounded-full bg-coach-gold px-10 py-3.5 text-coach-black text-[14px] font-medium tracking-[0.08em] uppercase hover:translate-y-[-1px] transition"
-          >
-            Try another session
-          </button>
+          {result.summary && (
+            <section className="flex flex-col gap-2">
+              <SectionHeader>Coach feedback</SectionHeader>
+              <div className="rounded-pulse-card bg-pulse-paper border border-pulse-stroke p-5">
+                <p className="font-pulse-body text-[14px] leading-[1.6] text-pulse-neutral-dark whitespace-pre-line">
+                  {result.summary}
+                </p>
+              </div>
+            </section>
+          )}
+
+          {(strengths.length > 0 || improvements.length > 0) && (
+            <section className="flex flex-col gap-2">
+              <SectionHeader>Key moments</SectionHeader>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {strengths.map((text, i) => (
+                  <HighlightCard key={`s-${i}`} kind="strength" text={text} />
+                ))}
+                {improvements.map((text, i) => (
+                  <HighlightCard
+                    key={`i-${i}`}
+                    kind="improvement"
+                    text={text}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {result.recommendedNextFeedback && (
+            <section className="rounded-pulse-card bg-pulse-paper border border-pulse-stroke p-5 flex flex-col gap-2">
+              <p className="font-pulse-ext text-[9px] tracking-[0.22em] uppercase font-medium text-pulse-meta">
+                Recommended next
+              </p>
+              <p className="font-pulse-body italic text-[15px] leading-[1.55] text-pulse-primary">
+                {result.recommendedNextFeedback}
+              </p>
+            </section>
+          )}
+
+          <div className="flex justify-center pt-2">
+            <button
+              type="button"
+              onClick={onTryAgain}
+              className="inline-flex items-center justify-center rounded-pulse-pill bg-coach-black text-coach-cream font-pulse-ext text-[12px] font-medium tracking-[0.12em] uppercase px-10 py-4 hover:opacity-90 active:scale-[0.99] transition-all"
+            >
+              Try another session
+            </button>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
+  );
+}
+
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="font-pulse-ext text-[9px] tracking-[0.22em] uppercase font-medium text-pulse-meta px-1">
+      {children}
+    </h2>
   );
 }
 
@@ -190,23 +217,26 @@ function ScoreRing({
   pct: number | null;
   stars?: number;
 }) {
-  const radius = 32;
+  const radius = 36;
   const circumference = 2 * Math.PI * radius;
   const hasProgress = typeof pct === "number";
   const offset = hasProgress
     ? circumference * (1 - Math.max(0, Math.min(100, pct!)) / 100)
     : circumference;
+  // Per Coach Pulse: black ring by default, green when 75+ (on track up).
+  const ringColor =
+    hasProgress && pct! >= 75 ? "var(--color-pulse-success)" : "var(--color-coach-black)";
 
   return (
-    <div className="rounded-2xl border border-coach-cream/10 bg-coach-cream/[0.04] p-4 flex flex-col items-center justify-center gap-3">
+    <div className="rounded-pulse-card bg-pulse-paper border border-pulse-stroke p-4 flex flex-col items-center justify-center gap-3">
       <div className="relative w-[88px] h-[88px]">
         <svg className="w-[88px] h-[88px] -rotate-90" aria-hidden>
           <circle
             cx="44"
             cy="44"
             r={radius}
-            stroke="rgba(245, 240, 235, 0.12)"
-            strokeWidth="4"
+            stroke="var(--color-pulse-stroke)"
+            strokeWidth="6"
             fill="none"
           />
           {hasProgress && (
@@ -214,8 +244,8 @@ function ScoreRing({
               cx="44"
               cy="44"
               r={radius}
-              stroke="#C9A227"
-              strokeWidth="4"
+              stroke={ringColor}
+              strokeWidth="6"
               fill="none"
               strokeDasharray={circumference}
               strokeDashoffset={offset}
@@ -224,21 +254,21 @@ function ScoreRing({
           )}
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-coach-cream font-medium text-[16px]">
+          <span className="font-pulse-ext text-[18px] font-medium text-pulse-primary">
             {value}
           </span>
         </div>
       </div>
       <div className="flex flex-col items-center gap-1">
-        <p className="text-coach-cream/70 text-[12px] font-medium">{label}</p>
+        <p className="font-pulse-body text-[12px] font-medium text-pulse-neutral-1">{label}</p>
         {typeof stars === "number" && (
           <div className="flex gap-0.5" aria-label={`${stars} of 5 stars`}>
             {[1, 2, 3, 4, 5].map((i) => (
               <Star
                 key={i}
-                size={12}
-                className={i <= stars ? "text-coach-gold" : "text-coach-cream/20"}
-                fill={i <= stars ? "#C9A227" : "transparent"}
+                size={11}
+                className={i <= stars ? "text-pulse-primary" : "text-pulse-stroke"}
+                fill={i <= stars ? "var(--color-pulse-primary)" : "transparent"}
               />
             ))}
           </div>
@@ -257,14 +287,12 @@ function CategorySection({
   title: string;
   categories: ScoreCategory[];
   scores: ScoringResult["scores"];
-  iconFor: (c: ScoreCategory) => React.ComponentType<{ size?: number }>;
+  iconFor: (c: ScoreCategory) => React.ComponentType<{ size?: number; className?: string }>;
 }) {
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-coach-cream/60 text-[11px] tracking-[0.25em] uppercase">
-        {title}
-      </h2>
-      <div className="rounded-2xl border border-coach-cream/10 bg-coach-cream/[0.04] p-5 flex flex-col gap-4">
+    <section className="flex flex-col gap-2">
+      <SectionHeader>{title}</SectionHeader>
+      <div className="rounded-pulse-card bg-pulse-paper border border-pulse-stroke p-5 flex flex-col gap-4">
         {categories.map((c) => {
           const raw = (scores as Record<string, number>)[c.key];
           const hasValue = typeof raw === "number";
@@ -294,27 +322,22 @@ function ScoreBar({
   label: string;
   pct: number;
   valueLabel: string;
-  Icon: React.ComponentType<{ size?: number }>;
+  Icon: React.ComponentType<{ size?: number; className?: string }>;
 }) {
-  // High (75+) coach-gold, mid (50-74) cream/60, low (<50) mahogany.
-  const barColor =
-    pct >= 75
-      ? "bg-coach-gold"
-      : pct >= 50
-        ? "bg-coach-cream/60"
-        : "bg-coach-mahogany";
+  // Pulse system: thin bar, pulse-success when at 100, otherwise coach-black.
+  const barColor = pct >= 100 ? "bg-pulse-success" : "bg-coach-black";
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between">
-        <span className="text-coach-cream text-[14px] inline-flex items-center gap-2">
+        <span className="font-pulse-body text-[14px] text-pulse-primary inline-flex items-center gap-2">
           <Icon size={15} />
           {label}
         </span>
-        <span className="text-coach-cream/80 text-[13px] tabular-nums">
+        <span className={`font-pulse-body text-[13px] tabular-nums ${pct >= 100 ? "text-pulse-success" : "text-pulse-primary"}`}>
           {valueLabel}
         </span>
       </div>
-      <div className="w-full h-1.5 rounded-full bg-coach-cream/10 overflow-hidden">
+      <div className="w-full h-1 rounded-full bg-pulse-stroke overflow-hidden">
         <div
           className={`${barColor} h-full rounded-full transition-all`}
           style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
@@ -334,20 +357,20 @@ function HighlightCard({
   const isStrength = kind === "strength";
   return (
     <div
-      className={`rounded-xl border-l-4 p-4 ${
-        isStrength
-          ? "border-coach-gold bg-coach-gold/[0.06]"
-          : "border-coach-mahogany bg-coach-mahogany/[0.12]"
+      className={`rounded-pulse-card bg-pulse-paper border border-pulse-stroke border-l-4 p-4 ${
+        isStrength ? "border-l-pulse-success" : "border-l-pulse-error"
       }`}
     >
       <p
-        className={`text-[10px] tracking-[0.25em] uppercase mb-1.5 ${
-          isStrength ? "text-coach-gold" : "text-coach-mahogany"
+        className={`font-pulse-ext text-[9px] tracking-[0.22em] uppercase font-medium mb-1.5 ${
+          isStrength ? "text-pulse-success" : "text-pulse-error"
         }`}
       >
         {isStrength ? "Strength" : "Area for improvement"}
       </p>
-      <p className="text-coach-cream/90 text-[14px] leading-[1.5]">{text}</p>
+      <p className="font-pulse-body text-[14px] leading-[1.5] text-pulse-neutral-dark">
+        {text}
+      </p>
     </div>
   );
 }

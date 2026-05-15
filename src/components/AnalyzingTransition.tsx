@@ -79,36 +79,41 @@ export function AnalyzingTransition({
   }, []);
 
   return (
-    <main className="flex-1 flex items-center justify-center px-6 py-12 bg-coach-black">
-      <div className="flex flex-col items-center gap-6 max-w-md text-center">
-        <div className="relative w-20 h-20 flex items-center justify-center">
+    <main className="flex-1 flex items-center justify-center px-6 py-12 bg-coach-cream">
+      <div className="flex flex-col items-center gap-8 max-w-md text-center">
+        <p className="font-pulse-ext text-[9px] tracking-[0.24em] uppercase font-medium text-pulse-meta">
+          Coach Pulse
+        </p>
+        <div className="relative w-24 h-24 flex items-center justify-center">
           <motion.span
             aria-hidden
             className="absolute inset-0 rounded-full"
-            style={{ backgroundColor: "rgba(201, 162, 39, 0.18)" }}
-            animate={{ scale: [1, 1.6, 1], opacity: [0.5, 0, 0.5] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
+            style={{ backgroundColor: "rgba(0, 0, 1, 0.06)" }}
+            animate={{ scale: [1, 1.7, 1], opacity: [0.6, 0, 0.6] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
           />
           <motion.span
             aria-hidden
-            className="absolute inset-3 rounded-full"
-            style={{ backgroundColor: "rgba(201, 162, 39, 0.3)" }}
-            animate={{ scale: [1, 1.25, 1], opacity: [0.8, 0.4, 0.8] }}
+            className="absolute inset-4 rounded-full"
+            style={{ backgroundColor: "rgba(0, 0, 1, 0.12)" }}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.85, 0.5, 0.85] }}
             transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.span
             aria-hidden
-            className="absolute inset-6 rounded-full bg-coach-gold"
+            className="absolute inset-8 rounded-full bg-coach-black"
             animate={{ scale: [1, 1.08, 1] }}
             transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
           />
         </div>
-        <p className="text-coach-cream text-[18px] font-normal">
-          Analyzing your conversation...
-        </p>
-        <p className="text-coach-cream/60 text-[14px] leading-relaxed">
-          Reviewing how you connected, explored, and guided.
-        </p>
+        <div className="flex flex-col gap-2">
+          <p className="font-bembo text-[22px] leading-[1.2] text-pulse-primary">
+            Analyzing your conversation
+          </p>
+          <p className="font-pulse-body text-[14px] leading-[1.55] text-pulse-neutral-1">
+            Reviewing how you connected, explored, and guided.
+          </p>
+        </div>
       </div>
     </main>
   );

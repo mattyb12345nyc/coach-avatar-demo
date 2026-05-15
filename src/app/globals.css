@@ -1,20 +1,115 @@
 @import "tailwindcss";
 
-@theme inline {
-  --color-coach-black: #1C1917;
-  --color-coach-gold: #C9A227;
-  --color-coach-cream: #F5F0EB;
-  --color-coach-mahogany: #5C2E1F;
-  --color-pulse-ink: #0A0A0A;
-  --color-pulse-divider: rgba(245, 240, 235, 0.1);
+/* Coach Pulse v2 — Megan Harvell + Joon type system (April 2026) */
 
-  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+@font-face {
+  font-family: 'Helvetica Neue LT Pro';
+  src: url('/fonts/redesign/HelveticaNeueLTPro-It.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue LT Pro';
+  src: url('/fonts/redesign/HelveticaNeueLTPro-Roman.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue LT Pro';
+  src: url('/fonts/redesign/HelveticaNeueLTPro-Md.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue LT Pro';
+  src: url('/fonts/redesign/HelveticaNeueLTPro-Bd.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue LT Pro Extended';
+  src: url('/fonts/redesign/HelveticaNeueLTPro-MdEx.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Helvetica Neue LT Pro Extended';
+  src: url('/fonts/redesign/HelveticaNeueLTPro-Ex.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bembo MT Pro';
+  src: url('/fonts/redesign/bembo-mt-pro.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme inline {
+  /* Coach palette — April 2026 actual hex values from coach-connect */
+  --color-coach-black: #000001;
+  --color-coach-cream: #FFFFFE;
+  --color-coach-mahogany: #5c3d2e;
+  --color-coach-gold: #F59E0B;
+  --color-coach-champagne: #e8dfd0;
+
+  /* Pulse semantic tokens — Megan Harvell + Joon spec */
+  --color-pulse-primary: #000001;
+  --color-pulse-secondary: #FFFFFE;
+  --color-pulse-paper: #FFFFFF;
+  --color-pulse-paper-warm: #FAFAF8;
+  --color-pulse-stroke: #E5E5E3;
+  --color-pulse-rule-warm: #E7E5E4;
+  --color-pulse-neutral: #949494;
+  --color-pulse-neutral-1: #6D6D6D;
+  --color-pulse-neutral-light: #F7F7F7;
+  --color-pulse-neutral-light-1: #F0F0F0;
+  --color-pulse-neutral-light-2: #E1E1E1;
+  --color-pulse-neutral-light-3: #C5C5C5;
+  --color-pulse-neutral-medium: #575757;
+  --color-pulse-neutral-dark: #333333;
+  --color-pulse-meta: #6B6B6B;
+  --color-pulse-success: #009D59;
+  --color-pulse-error: #FF6643;
+  --color-pulse-success-tint: #ECFCF4;
+  --color-pulse-warning-tint: #FFFADF;
+
+  /* Type families */
+  --font-sans: "Helvetica Neue LT Pro", Helvetica, Arial, sans-serif;
+  --font-pulse-body: "Helvetica Neue LT Pro", Helvetica, Arial, sans-serif;
+  --font-pulse-ext: "Helvetica Neue LT Pro Extended", "Helvetica Neue LT Pro", Helvetica, Arial, sans-serif;
+  --font-pulse-display: "Helvetica Neue LT Pro Extended", "Helvetica Neue LT Pro", Helvetica, Arial, sans-serif;
+  --font-bembo: "Bembo MT Pro", "Playfair Display", Georgia, serif;
+
+  /* Pulse radii */
+  --radius-pulse: 4px;
+  --radius-pulse-tile: 14px;
+  --radius-pulse-card: 20px;
+  --radius-pulse-pill: 999px;
+
+  /* Pulse shadows */
+  --shadow-pulse-card: 0 0 12px 0 rgba(0, 0, 0, 0.08);
+  --shadow-pulse-soft: 0 0 6px 0 rgba(0, 0, 0, 0.08);
+  --shadow-pulse-nav: 0 8px 32px rgba(28, 25, 23, 0.12);
 }
 
 html,
 body {
-  background-color: var(--color-coach-black);
-  color: var(--color-coach-cream);
+  background-color: var(--color-coach-cream);
+  color: var(--color-pulse-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -30,24 +125,13 @@ button {
   cursor: pointer;
 }
 
+/* Loading countdown ring keyframes */
 @keyframes coach-pulse-ring {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.85;
-  }
-  50% {
-    transform: scale(1.12);
-    opacity: 1;
-  }
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.12); opacity: 1; }
 }
 
 @keyframes coach-pulse-halo {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.4;
-  }
-  50% {
-    transform: scale(1.5);
-    opacity: 0;
-  }
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.5); opacity: 0; }
 }
