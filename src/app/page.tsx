@@ -8,6 +8,7 @@ import { AnalyzingTransition } from "@/components/AnalyzingTransition";
 import { ScoreCard } from "@/components/ScoreCard";
 import { SessionTooShort } from "@/components/SessionTooShort";
 import { DEFAULT_PERSONA } from "@/lib/defaultPersona";
+import { requestMicPermission } from "@/lib/requestMicPermission";
 import type {
   Persona,
   ScoringResult,
@@ -37,6 +38,12 @@ function HomeInner() {
   const [scoringError, setScoringError] = useState<string | null>(null);
 
   const handleStart = useCallback(async () => {
+    // Step 1: request mic permission FIRST so the browser popup
+    // resolves before the avatar starts loading. This avoids the
+    // weird simultaneous "mic permission + avatar talking" race.
+    await requestMicPermission();
+
+    // Step 2: now mint the LiveAvatar session token.
     const res = await fetch("/api/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
