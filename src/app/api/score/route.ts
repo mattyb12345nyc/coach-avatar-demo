@@ -49,9 +49,27 @@ function validateScores(parsed: unknown): ScoringResult {
 }
 
 function extractJson(text: string): unknown {
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("Response did not contain JSON");
-  return JSON.parse(match[0]);
+  // Anthropic occasionally wraps the JSON in code fences or chats around
+  // it. Try increasingly tolerant parses.
+  const trimmed = text.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // fall through
+  }
+  // Strip ```json fences if present
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (fenced) {
+    try {
+      return JSON.parse(fenced[1]);
+    } catch {
+      // fall through
+    }
+  }
+  // Greedy first-{ to last-} extraction
+  const match = trimmed.match(/\{[\s\S]*\}/);
+  if (match) return JSON.parse(match[0]);
+  throw new Error("Response did not contain JSON");
 }
 
 function formatTranscript(transcript: TranscriptLine[]): string {
@@ -90,6 +108,23 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // If essentially nothing was said, don't waste a model call — give the
+  // user a clear "too short" error they can act on.
+  const totalChars = transcript.reduce(
+    (sum, line) => sum + (typeof line.text === "string" ? line.text.length : 0),
+    0,
+  );
+  const userTurns = transcript.filter((line) => line.role === "user").length;
+  if (totalChars < 60 || userTurns < 2) {
+    return NextResponse.json(
+      {
+        error:
+          "Session too short to score. Aim for at least a couple of minutes with a few back-and-forth turns before ending.",
+      },
+      { status: 400 },
+    );
+  }
+
   const personaLabel =
     typeof persona === "string"
       ? persona
@@ -124,7 +159,12 @@ export async function POST(request: NextRequest) {
         model: SCORING_MODEL,
         max_tokens: SCORING_MAX_TOKENS,
         system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userContent }],
+        // Assistant prefill locks the model into producing JSON from the
+        // first token. The prefilled "{" is prepended back on parse.
+        messages: [
+          { role: "user", content: userContent },
+          { role: "assistant", content: "{" },
+        ],
       }),
       signal: AbortSignal.timeout(25000),
     });
@@ -153,8 +193,36 @@ export async function POST(request: NextRequest) {
         { status: 502 },
       );
     }
-    const parsed = extractJson(block.text);
-    const validated = validateScores(parsed);
+    // Re-attach the prefilled "{" since Anthropic returns only the
+    // tokens it generated after the prefill.
+    const raw = block.text.trim().startsWith("{")
+      ? block.text
+      : "{" + block.text;
+    let parsed: unknown;
+    try {
+      parsed = extractJson(raw);
+    } catch (parseErr) {
+      console.error("Scoring JSON parse failed. Raw text:", raw.slice(0, 1000));
+      return NextResponse.json(
+        {
+          error: `Scoring returned non-JSON: ${(parseErr as Error).message}`,
+          rawPreview: raw.slice(0, 400),
+        },
+        { status: 502 },
+      );
+    }
+    let validated;
+    try {
+      validated = validateScores(parsed);
+    } catch (validateErr) {
+      console.error("Scoring validation failed. Parsed:", parsed);
+      return NextResponse.json(
+        {
+          error: `Scoring validation failed: ${(validateErr as Error).message}`,
+        },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({
       ...validated,
