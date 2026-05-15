@@ -3,11 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SessionState } from "@heygen/liveavatar-web-sdk";
 import { ChromaKeyVideo } from "./ChromaKeyVideo";
-import {
-  LiveAvatarContextProvider,
-  useLiveAvatarContext,
-  useSession,
-} from "@/liveavatar";
+import { LiveAvatarContextProvider, useSession } from "@/liveavatar";
 import { BACKGROUND } from "@/config/backgrounds";
 import {
   DEFAULT_CHROMA_KEY_OPTIONS,
@@ -16,7 +12,6 @@ import {
 } from "@/lib/types";
 
 const MAX_SESSION_SECONDS = 10 * 60;
-const COUNTDOWN_START = 5;
 
 type ActiveSessionProps = {
   sessionToken: string;
@@ -44,23 +39,14 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
     stopSession,
     transcript,
   } = useSession();
-  const { sessionRef } = useLiveAvatarContext();
 
   const [elapsed, setElapsed] = useState(0);
-  const [countdown, setCountdown] = useState(COUNTDOWN_START);
   const startedRef = useRef(false);
   const endedRef = useRef(false);
-  const unmutedRef = useRef(false);
   const transcriptRef = useRef<TranscriptLine[]>([]);
   const [chromaOptions, setChromaOptions] = useState<ChromaKeyOptions>(
     DEFAULT_CHROMA_KEY_OPTIONS,
   );
-
-  // Gate for "is it safe to let the avatar interact with the user?"
-  // Opens only when the LiveAvatar stream is fully ready AND the
-  // 5-second countdown has completed. Used to defer attaching the
-  // media stream and unmuting the user's microphone.
-  const readyToInteract = isStreamReady && countdown <= 0;
 
   useEffect(() => {
     transcriptRef.current = transcript;
@@ -74,36 +60,11 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
     });
   }, [startSession]);
 
-  // Session-elapsed timer starts only after the avatar can actually
-  // interact — the 5s countdown shouldn't count against the user's
-  // 10-minute session cap.
   useEffect(() => {
-    if (!readyToInteract) return;
+    if (!isStreamReady) return;
     const t = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(t);
-  }, [readyToInteract]);
-
-  // 5s countdown ticks every second regardless of stream-ready state,
-  // so it always plays the full duration on the user's screen even
-  // when the network connects faster.
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [countdown]);
-
-  // Once both gates are open, unmute the mic so the avatar's
-  // turn-taking can actually hear the user. Voice chat was created
-  // with defaultMuted: true in the context provider.
-  useEffect(() => {
-    if (!readyToInteract || unmutedRef.current) return;
-    const session = sessionRef.current;
-    if (!session) return;
-    unmutedRef.current = true;
-    session.voiceChat
-      .unmute()
-      .catch((err) => console.warn("voiceChat.unmute failed:", err));
-  }, [readyToInteract, sessionRef]);
+  }, [isStreamReady]);
 
   useEffect(() => {
     if (elapsed >= MAX_SESSION_SECONDS && !endedRef.current) {
@@ -152,10 +113,7 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
   const seconds = (elapsed % 60).toString().padStart(2, "0");
   const remaining = Math.max(0, MAX_SESSION_SECONDS - elapsed);
 
-  // Keep the overlay up until BOTH the stream is ready AND the
-  // countdown has elapsed — never let the avatar appear before the
-  // gate opens.
-  const isConnecting = !readyToInteract;
+  const isConnecting = !isStreamReady;
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-coach-black">
@@ -170,57 +128,40 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
         }}
       />
 
-      {/* Avatar — stream is attached only after the interaction gate
-          opens, so the avatar can't speak or be heard during the
-          countdown. */}
+      {/* Avatar */}
       <div className="absolute inset-0 z-10">
-        <ChromaKeyVideo
-          offset={BACKGROUND.avatarOffset}
-          chromaOptions={chromaOptions}
-          attachEnabled={readyToInteract}
-        />
+        <ChromaKeyVideo offset={BACKGROUND.avatarOffset} chromaOptions={chromaOptions} />
       </div>
 
-      {/* Connecting overlay — Coach Pulse cream card with black countdown ring */}
+      {/* Connecting overlay — simple pulsing-dot card, no countdown */}
       {isConnecting && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-coach-black/60 backdrop-blur-sm">
-          <div className="rounded-pulse-card bg-pulse-paper shadow-pulse-card px-10 py-9 flex flex-col items-center gap-6 max-w-[360px] mx-6">
+          <div className="rounded-pulse-card bg-pulse-paper shadow-pulse-card px-10 py-9 flex flex-col items-center gap-5 max-w-[360px] mx-6">
             <p className="font-pulse-ext text-[9px] tracking-[0.24em] uppercase font-medium text-pulse-meta">
               Coach Pulse
             </p>
-            <div className="relative w-[112px] h-[112px] flex items-center justify-center">
-              <svg className="absolute inset-0 w-[112px] h-[112px] -rotate-90" aria-hidden>
-                <circle
-                  cx="56"
-                  cy="56"
-                  r="48"
-                  stroke="var(--color-pulse-stroke)"
-                  strokeWidth="6"
-                  fill="none"
-                />
-                <circle
-                  cx="56"
-                  cy="56"
-                  r="48"
-                  stroke="var(--color-coach-black)"
-                  strokeWidth="6"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 48}
-                  strokeDashoffset={(2 * Math.PI * 48) * (countdown / COUNTDOWN_START)}
-                  style={{ transition: "stroke-dashoffset 1s linear" }}
-                />
-              </svg>
-              <span className="font-pulse-ext text-[32px] font-medium tabular-nums text-pulse-primary">
-                {Math.max(0, countdown)}
-              </span>
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <span
+                className="absolute inset-0 rounded-full bg-coach-black"
+                style={{
+                  animation: "coach-pulse-halo 1.8s ease-out infinite",
+                }}
+                aria-hidden
+              />
+              <span
+                className="relative w-3.5 h-3.5 rounded-full bg-coach-black"
+                style={{
+                  animation: "coach-pulse-ring 1.4s ease-in-out infinite",
+                }}
+                aria-hidden
+              />
             </div>
             <div className="flex flex-col items-center gap-1 text-center">
               <p className="font-bembo text-[20px] leading-[1.2] text-pulse-primary">
                 Connecting your practice partner
               </p>
               <p className="font-pulse-body text-[13px] text-pulse-neutral-1">
-                {countdown > 0 ? `Ready in ${countdown}s` : "Almost there…"}
+                One moment…
               </p>
             </div>
           </div>
@@ -237,7 +178,7 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
         </p>
       </div>
 
-      {/* Top-right: timer pill (white-on-translucent) */}
+      {/* Top-right: timer pill */}
       <div className="absolute top-6 right-6 z-20 flex items-center gap-2 rounded-pulse-pill bg-pulse-paper px-4 py-2 shadow-pulse-soft">
         <span className="w-1.5 h-1.5 rounded-full bg-coach-black" />
         <span className="font-pulse-ext text-[13px] font-medium tabular-nums text-pulse-primary">

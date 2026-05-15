@@ -51,9 +51,7 @@ export const LiveAvatarContextProvider = ({
   const sessionRef = useRef<LiveAvatarSession | null>(null);
   if (sessionRef.current === null) {
     sessionRef.current = new LiveAvatarSession(sessionAccessToken, {
-      // Start with mic muted so the user can't be heard until the
-      // countdown completes; unmute is called explicitly from ActiveSession.
-      voiceChat: { defaultMuted: true },
+      voiceChat: true,
       apiUrl: process.env.NEXT_PUBLIC_LIVEAVATAR_API_URL,
     });
   }
