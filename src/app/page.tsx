@@ -6,6 +6,7 @@ import { PreSession } from "@/components/PreSession";
 import { ActiveSession } from "@/components/ActiveSession";
 import { AnalyzingTransition } from "@/components/AnalyzingTransition";
 import { ScoreCard } from "@/components/ScoreCard";
+import { SessionTooShort } from "@/components/SessionTooShort";
 import { DEFAULT_PERSONA } from "@/lib/defaultPersona";
 import type {
   Persona,
@@ -96,6 +97,12 @@ function HomeInner() {
     setScreen("score");
   }, []);
 
+  const handleTooShort = useCallback(() => {
+    setScoringError(null);
+    setScoreData(null);
+    setScreen("too-short");
+  }, []);
+
   const handleTryAgain = useCallback(() => {
     setScreen("pre-session");
     setSessionToken(null);
@@ -131,6 +138,17 @@ function HomeInner() {
         endedReason={endedReason}
         onComplete={handleScoringComplete}
         onError={handleScoringError}
+        onTooShort={handleTooShort}
+      />
+    );
+  }
+
+  if (screen === "too-short") {
+    return (
+      <SessionTooShort
+        persona={persona}
+        durationSeconds={durationSeconds}
+        onTryAgain={handleTryAgain}
       />
     );
   }

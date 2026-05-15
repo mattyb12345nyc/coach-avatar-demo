@@ -11,7 +11,14 @@ type AnalyzingTransitionProps = {
   endedReason: string;
   onComplete: (result: ScoringResult) => void;
   onError: (error: string) => void;
+  onTooShort: () => void;
 };
+
+// Client-side guard: if there's basically nothing to score, skip the
+// API call and route straight to the "too short" screen. Mirrors the
+// server-side threshold in /api/score so we don't burn a model call.
+const MIN_USER_TURNS = 2;
+const MIN_TOTAL_CHARS = 60;
 
 const MIN_DISPLAY_MS = 8000;
 
@@ -22,6 +29,7 @@ export function AnalyzingTransition({
   endedReason,
   onComplete,
   onError,
+  onTooShort,
 }: AnalyzingTransitionProps) {
   const startedRef = useRef(false);
 
@@ -30,11 +38,29 @@ export function AnalyzingTransition({
     startedRef.current = true;
 
     const startedAt = Date.now();
+
+    // Short-circuit obviously-too-short sessions before hitting the API.
+    const userTurns = transcript.filter((l) => l.role === "user").length;
+    const totalChars = transcript.reduce(
+      (sum, l) => sum + (l.text?.length ?? 0),
+      0,
+    );
+    if (userTurns < MIN_USER_TURNS || totalChars < MIN_TOTAL_CHARS) {
+      const wait = Math.max(0, MIN_DISPLAY_MS - (Date.now() - startedAt));
+      setTimeout(() => onTooShort(), wait);
+      return;
+    }
+
     const endpoint =
       process.env.NEXT_PUBLIC_SCORING_ENDPOINT &&
       process.env.NEXT_PUBLIC_SCORING_ENDPOINT.trim().length > 0
         ? process.env.NEXT_PUBLIC_SCORING_ENDPOINT
         : "/api/score";
+
+    const finish = (fn: () => void) => {
+      const wait = Math.max(0, MIN_DISPLAY_MS - (Date.now() - startedAt));
+      setTimeout(fn, wait);
+    };
 
     const run = async () => {
       try {
@@ -57,20 +83,30 @@ export function AnalyzingTransition({
           }),
         });
         if (!res.ok) {
-          const errText = await res.text().catch(() => "");
-          throw new Error(`Scoring failed (${res.status}): ${errText.slice(0, 200)}`);
+          let serverErr = "";
+          try {
+            const payload = (await res.json()) as { error?: string };
+            serverErr = payload.error ?? "";
+          } catch {
+            serverErr = (await res.text().catch(() => "")).slice(0, 200);
+          }
+          // The server returns 400 with "Session too short..." for
+          // empty/sparse transcripts. Route those to the dedicated UI.
+          if (
+            res.status === 400 &&
+            /too short/i.test(serverErr)
+          ) {
+            finish(() => onTooShort());
+            return;
+          }
+          throw new Error(
+            `Scoring failed (${res.status}): ${serverErr || "unknown error"}`,
+          );
         }
         const data = (await res.json()) as ScoringResult;
-        const elapsed = Date.now() - startedAt;
-        const wait = Math.max(0, MIN_DISPLAY_MS - elapsed);
-        setTimeout(() => onComplete(data), wait);
+        finish(() => onComplete(data));
       } catch (err) {
-        const elapsed = Date.now() - startedAt;
-        const wait = Math.max(0, MIN_DISPLAY_MS - elapsed);
-        setTimeout(
-          () => onError((err as Error).message || "Scoring failed"),
-          wait,
-        );
+        finish(() => onError((err as Error).message || "Scoring failed"));
       }
     };
 

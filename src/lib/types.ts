@@ -2,7 +2,8 @@ export type Screen =
   | "pre-session"
   | "active"
   | "analyzing"
-  | "score";
+  | "score"
+  | "too-short";
 
 export type TranscriptRole = "user" | "avatar";
 
