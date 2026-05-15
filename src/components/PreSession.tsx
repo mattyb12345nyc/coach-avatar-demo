@@ -39,24 +39,45 @@ export function PreSession({ persona, onStart }: PreSessionProps) {
           </p>
         </header>
 
-        <section className="w-full max-w-[480px] rounded-2xl border border-coach-gold/40 bg-coach-black/40 p-6 backdrop-blur-sm">
+        <section className="w-full max-w-[520px] rounded-2xl border border-coach-gold/40 bg-coach-black/40 p-6 backdrop-blur-sm">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-coach-gold/15 border border-coach-gold/40 flex items-center justify-center text-coach-gold text-lg font-medium">
-              {persona.name.charAt(0)}
-            </div>
+            {persona.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={persona.image}
+                alt={persona.name}
+                className="w-14 h-14 rounded-full object-cover border border-coach-gold/40"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-coach-gold/15 border border-coach-gold/40 flex items-center justify-center text-coach-gold text-lg font-medium">
+                {persona.name.charAt(0)}
+              </div>
+            )}
             <div className="flex-1 text-left">
               <p className="text-coach-cream text-[16px] font-medium">
                 {persona.name}
                 {persona.age ? `, ${persona.age}` : ""}
               </p>
-              <p className="text-coach-cream/60 text-[13px] mt-0.5">
-                Your practice partner
-              </p>
+              {persona.type && (
+                <p className="text-coach-gold/80 text-[12px] tracking-[0.18em] uppercase mt-0.5">
+                  {persona.type}
+                </p>
+              )}
             </div>
           </div>
-          <p className="mt-4 text-left text-coach-cream/80 text-[14px] leading-[1.55]">
+          <p className="mt-4 text-left text-coach-cream/85 text-[14px] leading-[1.55]">
             {persona.scenario}
           </p>
+          {persona.tip && (
+            <div className="mt-4 rounded-xl bg-coach-cream/[0.04] border border-coach-cream/10 p-4 text-left">
+              <p className="text-coach-mahogany text-[10px] tracking-[0.25em] uppercase font-medium mb-1">
+                Remember
+              </p>
+              <p className="text-coach-cream/80 text-[13px] leading-[1.5]">
+                {persona.tip}
+              </p>
+            </div>
+          )}
         </section>
 
         <div className="inline-flex items-center gap-2 rounded-full border border-coach-cream/15 px-4 py-1.5">

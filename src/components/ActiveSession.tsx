@@ -43,6 +43,7 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
   } = useSession();
 
   const [elapsed, setElapsed] = useState(0);
+  const [countdown, setCountdown] = useState(7);
   const startedRef = useRef(false);
   const endedRef = useRef(false);
   const transcriptRef = useRef<TranscriptLine[]>([]);
@@ -71,6 +72,14 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
     }, 1000);
     return () => clearInterval(t);
   }, [isStreamReady]);
+
+  // 7-second loading countdown. Ticks while the stream isn't ready yet.
+  useEffect(() => {
+    if (isStreamReady) return;
+    if (countdown <= 0) return;
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown, isStreamReady]);
 
   // Max duration enforcement.
   useEffect(() => {
@@ -140,12 +149,43 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
 
       {/* Connecting overlay */}
       {isConnecting && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-coach-black/70 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-coach-gold animate-pulse" />
-            <p className="text-coach-cream/80 text-[14px] tracking-wider uppercase">
-              Connecting your practice partner
-            </p>
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-coach-black/75 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative w-24 h-24 flex items-center justify-center">
+              <svg className="absolute inset-0 w-24 h-24 -rotate-90" aria-hidden>
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="42"
+                  stroke="rgba(245, 240, 235, 0.12)"
+                  strokeWidth="3"
+                  fill="none"
+                />
+                <circle
+                  cx="48"
+                  cy="48"
+                  r="42"
+                  stroke="#C9A227"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 42}
+                  strokeDashoffset={(2 * Math.PI * 42) * (countdown / 7)}
+                  strokeLinecap="round"
+                  style={{ transition: "stroke-dashoffset 1s linear" }}
+                />
+              </svg>
+              <span className="text-coach-cream text-[32px] font-medium tabular-nums">
+                {Math.max(0, countdown)}
+              </span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5">
+              <p className="text-coach-cream text-[14px] tracking-[0.2em] uppercase font-medium">
+                Connecting your practice partner
+              </p>
+              <p className="text-coach-cream/60 text-[12px]">
+                {countdown > 0 ? `Ready in ${countdown}s` : "Almost there..."}
+              </p>
+            </div>
           </div>
         </div>
       )}

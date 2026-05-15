@@ -69,5 +69,11 @@ export type ScoringResult = {
 export type Persona = {
   name: string;
   age?: number;
+  type?: string;
   scenario: string;
+  tip?: string;
+  image?: string;
+  engagementZone?: string;
+  customerMoment?: string;
+  superpower?: string;
 };
