@@ -51,7 +51,9 @@ export const LiveAvatarContextProvider = ({
   const sessionRef = useRef<LiveAvatarSession | null>(null);
   if (sessionRef.current === null) {
     sessionRef.current = new LiveAvatarSession(sessionAccessToken, {
-      voiceChat: true,
+      // Start with mic muted so the user can't be heard until the
+      // countdown completes; unmute is called explicitly from ActiveSession.
+      voiceChat: { defaultMuted: true },
       apiUrl: process.env.NEXT_PUBLIC_LIVEAVATAR_API_URL,
     });
   }
@@ -65,8 +67,6 @@ export const LiveAvatarContextProvider = ({
   const [isAvatarTalking, setIsAvatarTalking] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
 
-  // Keep a ref to the latest onTranscriptUpdate so we can call it from
-  // event handlers without retriggering subscription effects.
   const onTranscriptUpdateRef = useRef(onTranscriptUpdate);
   useEffect(() => {
     onTranscriptUpdateRef.current = onTranscriptUpdate;
@@ -102,9 +102,6 @@ export const LiveAvatarContextProvider = ({
     };
   }, []);
 
-  // Transcript subscription — matches the basic demo pattern.
-  // User chunks are cumulative (replace). Avatar chunks are individual
-  // words (append). Final events overwrite the in-flight line.
   useEffect(() => {
     const session = sessionRef.current;
     if (!session) return;

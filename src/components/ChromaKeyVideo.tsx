@@ -12,11 +12,16 @@ import {
 type ChromaKeyVideoProps = {
   offset: AvatarOffset;
   chromaOptions?: ChromaKeyOptions;
+  // When false, the stream is NOT attached to the video element. This
+  // suppresses audio playback during the loading countdown so the avatar
+  // cannot start interacting with the user before the gate opens.
+  attachEnabled?: boolean;
 };
 
 export function ChromaKeyVideo({
   offset,
   chromaOptions = DEFAULT_CHROMA_KEY_OPTIONS,
+  attachEnabled = true,
 }: ChromaKeyVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -25,10 +30,10 @@ export function ChromaKeyVideo({
   const { isStreamReady, attachElement } = useSession();
 
   useEffect(() => {
-    if (isStreamReady && videoRef.current) {
+    if (isStreamReady && attachEnabled && videoRef.current) {
       attachElement(videoRef.current);
     }
-  }, [isStreamReady, attachElement]);
+  }, [isStreamReady, attachEnabled, attachElement]);
 
   useEffect(() => {
     const video = videoRef.current;

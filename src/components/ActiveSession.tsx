@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { SessionState } from "@heygen/liveavatar-web-sdk";
 import { ChromaKeyVideo } from "./ChromaKeyVideo";
-import { LiveAvatarContextProvider, useSession } from "@/liveavatar";
+import {
+  LiveAvatarContextProvider,
+  useLiveAvatarContext,
+  useSession,
+} from "@/liveavatar";
 import { BACKGROUND } from "@/config/backgrounds";
 import {
   DEFAULT_CHROMA_KEY_OPTIONS,
@@ -12,7 +16,7 @@ import {
 } from "@/lib/types";
 
 const MAX_SESSION_SECONDS = 10 * 60;
-const COUNTDOWN_START = 12;
+const COUNTDOWN_START = 5;
 
 type ActiveSessionProps = {
   sessionToken: string;
@@ -40,15 +44,23 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
     stopSession,
     transcript,
   } = useSession();
+  const { sessionRef } = useLiveAvatarContext();
 
   const [elapsed, setElapsed] = useState(0);
   const [countdown, setCountdown] = useState(COUNTDOWN_START);
   const startedRef = useRef(false);
   const endedRef = useRef(false);
+  const unmutedRef = useRef(false);
   const transcriptRef = useRef<TranscriptLine[]>([]);
   const [chromaOptions, setChromaOptions] = useState<ChromaKeyOptions>(
     DEFAULT_CHROMA_KEY_OPTIONS,
   );
+
+  // Gate for "is it safe to let the avatar interact with the user?"
+  // Opens only when the LiveAvatar stream is fully ready AND the
+  // 5-second countdown has completed. Used to defer attaching the
+  // media stream and unmuting the user's microphone.
+  const readyToInteract = isStreamReady && countdown <= 0;
 
   useEffect(() => {
     transcriptRef.current = transcript;
@@ -62,17 +74,36 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
     });
   }, [startSession]);
 
+  // Session-elapsed timer starts only after the avatar can actually
+  // interact — the 5s countdown shouldn't count against the user's
+  // 10-minute session cap.
   useEffect(() => {
-    if (!isStreamReady) return;
+    if (!readyToInteract) return;
     const t = setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => clearInterval(t);
-  }, [isStreamReady]);
+  }, [readyToInteract]);
 
+  // 5s countdown ticks every second regardless of stream-ready state,
+  // so it always plays the full duration on the user's screen even
+  // when the network connects faster.
   useEffect(() => {
-    if (isStreamReady || countdown <= 0) return;
+    if (countdown <= 0) return;
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
-  }, [countdown, isStreamReady]);
+  }, [countdown]);
+
+  // Once both gates are open, unmute the mic so the avatar's
+  // turn-taking can actually hear the user. Voice chat was created
+  // with defaultMuted: true in the context provider.
+  useEffect(() => {
+    if (!readyToInteract || unmutedRef.current) return;
+    const session = sessionRef.current;
+    if (!session) return;
+    unmutedRef.current = true;
+    session.voiceChat
+      .unmute()
+      .catch((err) => console.warn("voiceChat.unmute failed:", err));
+  }, [readyToInteract, sessionRef]);
 
   useEffect(() => {
     if (elapsed >= MAX_SESSION_SECONDS && !endedRef.current) {
@@ -121,10 +152,10 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
   const seconds = (elapsed % 60).toString().padStart(2, "0");
   const remaining = Math.max(0, MAX_SESSION_SECONDS - elapsed);
 
-  const isConnecting =
-    sessionState === SessionState.INACTIVE ||
-    sessionState === SessionState.CONNECTING ||
-    !isStreamReady;
+  // Keep the overlay up until BOTH the stream is ready AND the
+  // countdown has elapsed — never let the avatar appear before the
+  // gate opens.
+  const isConnecting = !readyToInteract;
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-coach-black">
@@ -139,9 +170,15 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
         }}
       />
 
-      {/* Avatar */}
+      {/* Avatar — stream is attached only after the interaction gate
+          opens, so the avatar can't speak or be heard during the
+          countdown. */}
       <div className="absolute inset-0 z-10">
-        <ChromaKeyVideo offset={BACKGROUND.avatarOffset} chromaOptions={chromaOptions} />
+        <ChromaKeyVideo
+          offset={BACKGROUND.avatarOffset}
+          chromaOptions={chromaOptions}
+          attachEnabled={readyToInteract}
+        />
       </div>
 
       {/* Connecting overlay — Coach Pulse cream card with black countdown ring */}
