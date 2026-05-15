@@ -43,7 +43,7 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
   } = useSession();
 
   const [elapsed, setElapsed] = useState(0);
-  const [countdown, setCountdown] = useState(7);
+  const [countdown, setCountdown] = useState(12);
   const startedRef = useRef(false);
   const endedRef = useRef(false);
   const transcriptRef = useRef<TranscriptLine[]>([]);
@@ -169,7 +169,7 @@ function ActiveSessionInner({ onSessionEnd, debug = false }: ActiveSessionProps)
                   strokeWidth="3"
                   fill="none"
                   strokeDasharray={2 * Math.PI * 42}
-                  strokeDashoffset={(2 * Math.PI * 42) * (countdown / 7)}
+                  strokeDashoffset={(2 * Math.PI * 42) * (countdown / 12)}
                   strokeLinecap="round"
                   style={{ transition: "stroke-dashoffset 1s linear" }}
                 />
