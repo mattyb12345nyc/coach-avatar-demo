@@ -128,22 +128,41 @@ FutureProof-owned and autonomous:
 - Verified: team→participant→session→leaderboard, badge auto-awarded at ≥90%,
   formula total matches (88 + 14 hero + 25 badge = 127). `npm run build` green.
 
-**Next, in order:**
-1. **Avatar IDs** — build the 6 HeyGen avatars, drop IDs into `scenarios.ts`.
-2. **Vertical pod UI** — iPhone-style portrait frame for the station screens.
-3. **Pulse Alerts** — Twilio SMS send + admin trigger + answer capture.
-4. **Admin tooling** — manage teams, fire Pulse Alerts, award prizes, export badges.
-5. **Deploy** — Netlify site + Supabase env vars + event subdomain.
-6. **Content capture + gala** — sizzle-reel pipeline, leaderboard reveal.
-7. **Main-stage moment** — Joon's multilingual avatar (EN → French → Korean).
+**Done — Pulse Alerts, admin, pod frame, gala (verified end-to-end + deployed):**
+- `src/lib/twilio.ts` — SMS sender (no-op if unconfigured).
+- `/api/alerts` (create/list), `/api/alerts/[id]/send` (fire + SMS blast),
+  `/api/alerts/respond` (grade + first-correct bonus), `/api/alerts/active`,
+  `/api/alerts/[id]/responses`. Verified: first-correct +15, dup blocked,
+  answer normalization, leaderboard `pulse_bonus` reflects it.
+- `src/app/pulse/page.tsx` — phone answer surface (poll for live alert).
+- `src/app/admin/page.tsx` — Floor Console (passcode-gated): roster CRUD,
+  fire alerts + live responses, standings, badge CSV export.
+- `/api/roster` DELETE + phone, `/api/admin/status`, `/api/badge-export` (CSV).
+- `src/components/StationFrame.tsx` — vertical iPhone pod frame (`?kiosk=1`).
+- Leaderboard gala reveal (`?reveal=1`, framer-motion stagger).
+- Migration `0002_pulse_alerts.sql` applied (phone + indexes).
+
+**Deployed:** live at **https://pulse-avatar.futureproof.work** (Netlify
+`pulse-avatar-demo`). Supabase env vars set on production; DB connected.
+
+**Next (owner-blocked or pre-event config):**
+1. **6 HeyGen avatar IDs** → `scenarios.ts` (FutureProof builds the avatars).
+2. **Set `ADMIN_PASSCODE`** on Netlify — admin console is currently OPEN.
+3. **Set Twilio creds** (`TWILIO_ACCOUNT_SID/AUTH_TOKEN/FROM`) to turn on SMS.
+4. **Joon decisions:** Theo hero-skill, badge names, open prizes (see above).
+5. **Content capture + gala** production (sizzle reel) — non-code.
+6. **Main-stage moment** — Joon's multilingual avatar (EN → French → Korean).
 
 ## Live infra
 
 - **Supabase:** project `coach-pulse-live` / ref `vjlryqntggyvwhuxuxzo` / us-west-1.
-  Env vars in `.env.local` (and `.env.local.example` as the template). For
-  Netlify, set the same `SUPABASE_*` + `NEXT_PUBLIC_SUPABASE_*` vars.
-- **QR targets:** `/?station=culture|moment|empathy|closer|explorer|brand`.
-- **Big screen:** `/leaderboard`.
+  Env in `.env.local` + `.env.local.example` template; set on Netlify prod.
+- **Production:** https://pulse-avatar.futureproof.work (Netlify CLI deploy:
+  `netlify deploy --build --prod`).
+- **QR targets (add `&kiosk=1` for the vertical pod screens):**
+  `/?station=culture|moment|empathy|closer|explorer|brand`.
+- **Big screen:** `/leaderboard` · **Gala reveal:** `/leaderboard?reveal=1`.
+- **Floor console:** `/admin` · **Manager phones (Pulse Alerts):** `/pulse`.
 
 ## Open questions from the deck
 
