@@ -12,6 +12,7 @@ import { StationFrame } from "@/components/StationFrame";
 import { Hub } from "@/components/Hub";
 import { SCENARIOS, getScenario } from "@/config/scenarios";
 import { requestMicPermission } from "@/lib/requestMicPermission";
+import { useIdleReset } from "@/lib/useIdleReset";
 import type {
   ActivePlayer,
   ScoringResult,
@@ -180,6 +181,24 @@ function HomeInner() {
     if (eventMode) setPlayer(null);
   }, [eventMode, resetSession]);
 
+  // Kiosk idle auto-reset: if a manager walks off on a static screen, send the
+  // station back to "who's playing" for the next person. Skips the live avatar
+  // and scoring screens. Tunable via ?idle=<seconds> (0 disables); default 60.
+  const idleSeconds = (() => {
+    const raw = searchParams?.get("idle");
+    if (raw === null || raw === undefined) return 60;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 60;
+  })();
+  const resettableScreen =
+    screen === "pre-session" || screen === "score" || screen === "too-short";
+  const idleSecondsLeft = useIdleReset({
+    active: eventMode && idleSeconds > 0 && resettableScreen,
+    totalMs: idleSeconds * 1000,
+    warnMs: 10000,
+    onIdle: handleTryAgain,
+  });
+
   // The command-center hub at the bare URL — short-circuits the experience.
   if (showHub) return <Hub />;
 
@@ -241,5 +260,28 @@ function HomeInner() {
   }
 
   // ?kiosk=1 wraps the experience in the vertical iPhone-style pod frame.
-  return kiosk ? <StationFrame>{content}</StationFrame> : content;
+  return (
+    <>
+      {kiosk ? <StationFrame>{content}</StationFrame> : content}
+      {idleSecondsLeft !== null && <IdleWarning seconds={idleSecondsLeft} />}
+    </>
+  );
+}
+
+// Brief grace banner before the kiosk resets for the next manager. Any tap
+// anywhere on screen cancels it (the idle hook listens window-wide).
+function IdleWarning({ seconds }: { seconds: number }) {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-6 pointer-events-none">
+      <div className="pointer-events-auto rounded-pulse-pill bg-coach-black text-coach-cream px-6 py-3.5 shadow-pulse-nav flex items-center gap-3">
+        <span className="font-pulse-body text-[13px]">
+          Resetting for the next manager in{" "}
+          <span className="text-coach-gold tabular-nums">{seconds}s</span>
+        </span>
+        <span className="font-pulse-ext text-[10px] tracking-[0.14em] uppercase text-coach-cream/60">
+          Tap to stay
+        </span>
+      </div>
+    </div>
+  );
 }

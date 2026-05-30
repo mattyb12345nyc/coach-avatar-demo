@@ -159,8 +159,14 @@ FutureProof-owned and autonomous:
   Env in `.env.local` + `.env.local.example` template; set on Netlify prod.
 - **Production:** https://pulse-avatar.futureproof.work (Netlify CLI deploy:
   `netlify deploy --build --prod`).
+- **Command center:** the bare URL `/` is a directory of every surface
+  (stations + copyable kiosk URLs, leaderboard, gala reveal, /pulse, /admin).
 - **QR targets (add `&kiosk=1` for the vertical pod screens):**
   `/?station=culture|moment|empathy|closer|explorer|brand`.
+- **Kiosk idle auto-reset:** static screens (pre-session / score / too-short)
+  return to "who's playing" after 60s idle, with a 10s "tap to stay" grace
+  banner. Tune per station with `&idle=<seconds>` (`&idle=0` disables). Never
+  fires during the live avatar conversation or scoring.
 - **Big screen:** `/leaderboard` · **Gala reveal:** `/leaderboard?reveal=1`.
 - **Floor console:** `/admin` · **Manager phones (Pulse Alerts):** `/pulse`.
 
