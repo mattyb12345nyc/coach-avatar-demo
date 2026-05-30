@@ -1,9 +1,18 @@
 export type Screen =
+  | "who"
   | "pre-session"
   | "active"
   | "analyzing"
   | "score"
   | "too-short";
+
+// The team + participant currently playing a station.
+export type ActivePlayer = {
+  teamId: string;
+  teamName: string;
+  participantId: string | null;
+  participantName: string;
+};
 
 export type TranscriptRole = "user" | "avatar";
 
