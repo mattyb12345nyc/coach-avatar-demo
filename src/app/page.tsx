@@ -9,6 +9,7 @@ import { ScoreCard } from "@/components/ScoreCard";
 import { SessionTooShort } from "@/components/SessionTooShort";
 import { WhosPlaying } from "@/components/WhosPlaying";
 import { StationFrame } from "@/components/StationFrame";
+import { Hub } from "@/components/Hub";
 import { SCENARIOS, getScenario } from "@/config/scenarios";
 import { requestMicPermission } from "@/lib/requestMicPermission";
 import type {
@@ -42,6 +43,12 @@ function HomeInner() {
     Boolean(stationParam) || searchParams?.get("event") === "1";
   // ?kiosk=1 renders inside the vertical iPhone-style pod frame.
   const kiosk = searchParams?.get("kiosk") === "1";
+  // The bare URL is the command center. A station, ?event=1, or ?practice=1
+  // takes you into the experience instead.
+  const showHub =
+    !stationParam &&
+    searchParams?.get("event") !== "1" &&
+    searchParams?.get("practice") !== "1";
   const persona = scenario.persona;
 
   const [screen, setScreen] = useState<Screen>(
@@ -172,6 +179,9 @@ function HomeInner() {
     setScreen(eventMode ? "who" : "pre-session");
     if (eventMode) setPlayer(null);
   }, [eventMode, resetSession]);
+
+  // The command-center hub at the bare URL — short-circuits the experience.
+  if (showHub) return <Hub />;
 
   let content: React.ReactNode;
   if (screen === "who") {
