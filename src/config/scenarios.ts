@@ -22,10 +22,15 @@ export type Scenario = {
   moment: string;
   // Customer the associate role-plays with.
   persona: Persona;
-  // HeyGen avatar for this station. null => falls back to LIVEAVATAR_AVATAR_ID.
-  // Override per station once the 6 avatar setups are built (FutureProof owns
-  // avatar creation per the deck's NEXT STEPS).
+  // HeyGen avatar for this station (the FACE). null => falls back to
+  // LIVEAVATAR_AVATAR_ID. Created on the HeyGen/LiveAvatar platform.
   avatarId: string | null;
+  // The VOICE (voice_id). null => falls back to LIVEAVATAR_VOICE_ID.
+  voiceId: string | null;
+  // The persona "brain" (context_id) — the LiveAvatar context built from this
+  // persona's entry in personaBrains.ts. null => falls back to
+  // LIVEAVATAR_CONTEXT_ID. This is what makes the avatar behave as the customer.
+  contextId: string | null;
   // The category this station crowns a champion in.
   heroSkill: HeroSkill;
   // The deck's friendly name for the hero skill (may differ from the rubric
@@ -57,6 +62,8 @@ export const SCENARIOS: Scenario[] = [
     moment: "Cultural Moment",
     persona: DEFAULT_PERSONA, // Zoe Chen — full persona already in the demo
     avatarId: null,
+    voiceId: null,
+    contextId: null,
     heroSkill: "culturalRelevance",
     heroSkillLabel: "Cultural Fluency",
     heroBadge: "Culture Champ",
@@ -75,6 +82,8 @@ export const SCENARIOS: Scenario[] = [
         "Gen Z celebrating a milestone. Already decided on the bag. The emotional moment matters more than selling.",
     },
     avatarId: null,
+    voiceId: null,
+    contextId: null,
     heroSkill: "understandingTheMoment",
     heroSkillLabel: "Understanding the Moment",
     heroBadge: "Moment Maker",
@@ -93,6 +102,8 @@ export const SCENARIOS: Scenario[] = [
         "Gen Z who received a bag as a gift. Needs to return/exchange. Feels awkward and uncomfortable.",
     },
     avatarId: null,
+    voiceId: null,
+    contextId: null,
     heroSkill: "emotionalConnection",
     heroSkillLabel: "Emotional Intelligence",
     heroBadge: "Empathy Expert",
@@ -111,6 +122,8 @@ export const SCENARIOS: Scenario[] = [
         "First-time luxury buyer. Has spent a month researching on TikTok and can't decide. Needs help making sense of her own preferences.",
     },
     avatarId: null,
+    voiceId: null,
+    contextId: null,
     heroSkill: "guidingTheDecision",
     heroSkillLabel: "Guiding the Decision",
     heroBadge: "Closer",
@@ -129,6 +142,8 @@ export const SCENARIOS: Scenario[] = [
         "Gen Z male exploring Coach for the first time. Interested in the Soho sneaker but not sure Coach feels relevant for him.",
     },
     avatarId: null,
+    voiceId: null,
+    contextId: null,
     // Deck hero skill: "Confidence Building" (not a scored category). Mapped to
     // exploringTogether — the orphaned rubric category — pending Joon's sign-off.
     heroSkill: "exploringTogether",
@@ -149,6 +164,8 @@ export const SCENARIOS: Scenario[] = [
         "Gen Z customer enters a Collection store looking for the Teri bag after seeing it trending heavily on social media.",
     },
     avatarId: null,
+    voiceId: null,
+    contextId: null,
     heroSkill: "productKnowledge",
     heroSkillLabel: "Brand Fluency",
     heroBadge: "Brand Fluency",

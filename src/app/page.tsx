@@ -73,12 +73,16 @@ function HomeInner() {
     // starts loading (avoids the mic-popup + avatar-talking race).
     await requestMicPermission();
 
+    // Bind this station's face + voice + persona brain. Anything null falls
+    // back to the LIVEAVATAR_* env defaults server-side.
+    const sessionBody: Record<string, string> = {};
+    if (scenario.avatarId) sessionBody.avatar_id = scenario.avatarId;
+    if (scenario.voiceId) sessionBody.voice_id = scenario.voiceId;
+    if (scenario.contextId) sessionBody.context_id = scenario.contextId;
     const res = await fetch("/api/session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(
-        scenario.avatarId ? { avatar_id: scenario.avatarId } : {},
-      ),
+      body: JSON.stringify(sessionBody),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: "Unknown error" }));
@@ -87,7 +91,7 @@ function HomeInner() {
     const { session_token } = (await res.json()) as { session_token: string };
     setSessionToken(session_token);
     setScreen("active");
-  }, [scenario.avatarId]);
+  }, [scenario.avatarId, scenario.voiceId, scenario.contextId]);
 
   const handleSessionEnd = useCallback(
     ({
