@@ -9,6 +9,7 @@ import {
   Smartphone,
   SlidersHorizontal,
   Play,
+  QrCode,
   Copy,
   Check,
   ArrowUpRight,
@@ -72,6 +73,12 @@ export function Hub() {
               icon={SlidersHorizontal}
               title="Floor Console"
               desc="Roster, fire Pulse Alerts, watch responses, standings, settings, and the badge export for Tapestry IT."
+            />
+            <NavCard
+              href="/kit"
+              icon={QrCode}
+              title="Station Kit (QR codes)"
+              desc="Printable QR codes for every surface — scan to launch each station screen, the leaderboard, and the phone page."
             />
             <NavCard
               href="/?practice=1"
