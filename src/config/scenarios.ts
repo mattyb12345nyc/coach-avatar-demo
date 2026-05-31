@@ -81,9 +81,9 @@ export const SCENARIOS: Scenario[] = [
       scenario:
         "Gen Z celebrating a milestone. Already decided on the bag. The emotional moment matters more than selling.",
     },
-    avatarId: null,
-    voiceId: null,
-    contextId: null,
+    avatarId: "69cf601f-b35b-4d1b-a701-c854d223b5a5", // Katya (Portrait) — placeholder face
+    voiceId: "b2bd6569-a537-4342-aeca-a1f15d2a2c97", // Rika
+    contextId: "b8b59215-a56f-4d96-a5f1-2196091e0281", // Sofia Rossi brain
     heroSkill: "understandingTheMoment",
     heroSkillLabel: "Understanding the Moment",
     heroBadge: "Moment Maker",
@@ -101,9 +101,9 @@ export const SCENARIOS: Scenario[] = [
       scenario:
         "Gen Z who received a bag as a gift. Needs to return/exchange. Feels awkward and uncomfortable.",
     },
-    avatarId: null,
-    voiceId: null,
-    contextId: null,
+    avatarId: "cd1d101c-9273-431b-8069-63beef736bec", // Judy — placeholder face
+    voiceId: "b2bd6569-a537-4342-aeca-a1f15d2a2c97", // Rika
+    contextId: "c9d7ef9e-beb1-4891-ad31-b1daa1288818", // Ji-Eun Park brain
     heroSkill: "emotionalConnection",
     heroSkillLabel: "Emotional Intelligence",
     heroBadge: "Empathy Expert",
@@ -121,9 +121,9 @@ export const SCENARIOS: Scenario[] = [
       scenario:
         "First-time luxury buyer. Has spent a month researching on TikTok and can't decide. Needs help making sense of her own preferences.",
     },
-    avatarId: null,
-    voiceId: null,
-    contextId: null,
+    avatarId: "06bcaebf-feeb-4e7a-8ab8-16b9f9537a19", // Amina (Portrait) — placeholder face
+    voiceId: "b2bd6569-a537-4342-aeca-a1f15d2a2c97", // Rika
+    contextId: "fbaa9790-a0c7-42cb-a448-a7d1ea74f05a", // Amara Okafor brain
     heroSkill: "guidingTheDecision",
     heroSkillLabel: "Guiding the Decision",
     heroBadge: "Closer",
@@ -141,9 +141,9 @@ export const SCENARIOS: Scenario[] = [
       scenario:
         "Gen Z male exploring Coach for the first time. Interested in the Soho sneaker but not sure Coach feels relevant for him.",
     },
-    avatarId: null,
-    voiceId: null,
-    contextId: null,
+    avatarId: "f0a9978d-634a-4063-8164-42ba6670542f", // Graham (Portrait) — placeholder face
+    voiceId: "c2527536-6d1f-4412-a643-53a3497dada9", // Wayne Liang
+    contextId: "1dc48609-0cd3-4a97-9f08-1e07d36aec9b", // Theo Laurent brain
     // Deck hero skill: "Confidence Building" (not a scored category). Mapped to
     // exploringTogether — the orphaned rubric category — pending Joon's sign-off.
     heroSkill: "exploringTogether",
@@ -163,9 +163,9 @@ export const SCENARIOS: Scenario[] = [
       scenario:
         "Gen Z customer enters a Collection store looking for the Teri bag after seeing it trending heavily on social media.",
     },
-    avatarId: null,
-    voiceId: null,
-    contextId: null,
+    avatarId: "9a4f4b1f-86f9-4acf-9a37-b81c21ae95e4", // Elenora — placeholder face
+    voiceId: "b2bd6569-a537-4342-aeca-a1f15d2a2c97", // Rika
+    contextId: "113ddd37-2e22-441c-a273-5c89e0de081a", // Valentina Cruz brain
     heroSkill: "productKnowledge",
     heroSkillLabel: "Brand Fluency",
     heroBadge: "Brand Fluency",
