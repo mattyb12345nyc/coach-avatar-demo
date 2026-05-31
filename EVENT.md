@@ -145,8 +145,18 @@ FutureProof-owned and autonomous:
 **Deployed:** live at **https://pulse-avatar.futureproof.work** (Netlify
 `pulse-avatar-demo`). Supabase env vars set on production; DB connected.
 
+**Avatars (DONE — brains + voices + placeholder faces wired & deployed):**
+- 5 LiveAvatar contexts created on the account (Sofia, Ji-Eun, Amara, Theo,
+  Valentina) from `personaBrains.ts` via `scripts/setup-avatars.mjs`.
+- Each station binds its own `contextId` + `voiceId` + `avatarId` in
+  `scenarios.ts`; Zoe/culture keeps the original default. Session-token mint
+  verified for the combos. Faces are STOCK PLACEHOLDERS (professional avatars,
+  not Gen Z) — swap for custom Photo Avatars for an authentic look.
+- Re-run setup any time: `LIVEAVATAR_API_KEY=… node scripts/setup-avatars.mjs`.
+
 **Next (owner-blocked or pre-event config):**
-1. **6 HeyGen avatar IDs** → `scenarios.ts` (FutureProof builds the avatars).
+1. **Swap the 5 faces** for Gen Z Photo Avatars (HeyGen) + optionally diversify
+   voices; drop new ids into `scenarios.ts`. Brains/voices already wired.
 2. **Set `ADMIN_PASSCODE`** on Netlify — admin console is currently OPEN.
 3. **Set Twilio creds** (`TWILIO_ACCOUNT_SID/AUTH_TOKEN/FROM`) to turn on SMS.
 4. **Joon decisions:** Theo hero-skill, badge names, open prizes (see above).
