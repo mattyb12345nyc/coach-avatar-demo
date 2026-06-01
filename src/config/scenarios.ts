@@ -61,7 +61,7 @@ export const SCENARIOS: Scenario[] = [
     archetype: "First Luxury Purchase",
     moment: "Cultural Moment",
     persona: DEFAULT_PERSONA, // Zoe Chen — full persona already in the demo
-    avatarId: null,
+    avatarId: "61e0bb14-b549-4a3c-9084-420654896012", // Zoe Chen face
     voiceId: null,
     contextId: null,
     heroSkill: "culturalRelevance",
