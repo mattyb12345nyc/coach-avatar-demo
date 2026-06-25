@@ -48,6 +48,16 @@ export const PERSONAS: Persona[] = [
     ],
     image: "/personas/persona_zoe-chen-1.webp",
     agentId: "agent_5401ksrmcshceawaeqfjd5axpp1s",
+    languageAgents: {
+      fr: "agent_1501kvdre03jeg695kdhhw76q810",
+      es: "agent_6001kve1qs6zevdamwfv9bghq58q",
+      it: "agent_2401kvejx8qfegcvghj5egdqdwa2",
+      de: "agent_9401kvery0d0fzm892nxhd41g89r",
+      ja: "agent_4801kvev9sgcfeqr41z6htknmfg1",
+      ko: "agent_9601kvezmyncfscrs0p83e6n28m0",
+      zh: "agent_8301kvg3kmkrfv5sv0dfw8yfeht2",
+      "zh-HK": "agent_5001kvg1bf8web8rcapt8gp4f135",
+    },
     scenarioMode: "decision",
     sortOrder: 1,
   },
@@ -65,6 +75,16 @@ export const PERSONAS: Persona[] = [
     ],
     image: "/personas/persona_sofia-rossi.webp",
     agentId: "agent_8301kmv4gyw1e5z8r6paysfjh6rg",
+    languageAgents: {
+      fr: "agent_9701kvds0mtcerz95418yzx86jtr",
+      es: "agent_0301kve12s2pffcrp88mzvmzr33j",
+      it: "agent_5901kve39e9tej6s1avtfg2m7t2g",
+      de: "agent_9201kveqxq00fkw8eafejmjqt241",
+      ja: "agent_3001kvetcbdkf3japhvdg7dvszyp",
+      ko: "agent_4001kveytd40fwvbngkx8c300wvq",
+      zh: "agent_1001kvg2q0p5fets6sfyxady70mp",
+      "zh-HK": "agent_3001kvfzkvkffem914jjcyp5jrh8",
+    },
     scenarioMode: "decision",
     sortOrder: 2,
   },
@@ -82,6 +102,16 @@ export const PERSONAS: Persona[] = [
     ],
     image: "/personas/persona_ji-eun-park.webp",
     agentId: "agent_3101kmv4w246fx6atf9a1k3yk2mf",
+    languageAgents: {
+      fr: "agent_7801kvdjxmhgfj49cdvadxmntae5",
+      es: "agent_2901kve2mv0mesea5jw542703edh",
+      it: "agent_7301kvemkyrvegwrq359xfkz21gy",
+      de: "agent_5601kvesqxnpf80an4rvb7w3vfe9",
+      ja: "agent_4701kvew7c4te2can9vsdy70edyj",
+      ko: "agent_6301kvf0mkexf8rvy1h2sxcvd7aw",
+      zh: "agent_2201kvg4mmgbfpza868653q00sad",
+      "zh-HK": "agent_5301kvg28rnqew2a0z3d7mj9q5av",
+    },
     scenarioMode: "decision",
     sortOrder: 3,
   },
@@ -98,11 +128,18 @@ export const GAMES: Game[] = [
   { slug: "self-expression", name: "Project Self-Expression", maxPoints: 15, sortOrder: 6 },
 ];
 
+// Only languages we have ElevenLabs twin agents for (per persona). Portuguese
+// has no twin yet — per the brief, those CI LatAm teams run in Spanish.
 export const LANGUAGES: Language[] = [
   { code: "en", label: "English" },
   { code: "es", label: "Español" },
   { code: "fr", label: "Français" },
-  { code: "pt", label: "Português" },
+  { code: "it", label: "Italiano" },
+  { code: "de", label: "Deutsch" },
+  { code: "ja", label: "日本語" },
+  { code: "ko", label: "한국어" },
+  { code: "zh", label: "中文 (普通话)" },
+  { code: "zh-HK", label: "粵語 (廣東話)" },
 ];
 
 export const EVENT_CONFIG = {
