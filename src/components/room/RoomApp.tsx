@@ -290,7 +290,7 @@ function TopBar({
   const teamLabel = teams.find((t) => t.id === teamId)?.label;
   return (
     <header className="px-6 py-4 flex items-center justify-between border-b border-coach-cream/10">
-      <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-gold">
+      <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-cream">
         Coach Pulse Live · Role-Play Room
       </p>
       <div className="flex items-center gap-4 font-pulse-body text-[12px] text-coach-cream/60">
@@ -304,7 +304,7 @@ function TopBar({
                   i < personaIdx
                     ? "bg-pulse-success"
                     : i === personaIdx
-                      ? "bg-coach-gold"
+                      ? "bg-coach-cream"
                       : "bg-coach-cream/25"
                 }`}
               />
@@ -338,7 +338,7 @@ function StartScreen({
   return (
     <Panel>
       <div>
-        <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-gold">Ready when you are</p>
+        <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream">Ready when you are</p>
         <h1 className="mt-3 font-bembo text-[40px] leading-[1.05]">Pick the team. Hit start.</h1>
       </div>
       <div className="w-full max-w-[360px] flex flex-col gap-3">
@@ -365,7 +365,7 @@ function StartScreen({
           type="button"
           disabled={teamId == null}
           onClick={onStart}
-          className="mt-2 rounded-pulse-pill bg-coach-gold text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-10 py-4 disabled:opacity-40"
+          className="mt-2 rounded-pulse-pill bg-coach-cream text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-10 py-4 disabled:opacity-40"
         >
           Start
         </button>
@@ -390,7 +390,7 @@ function ReadyScreen({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={persona.image} alt={persona.name} className="w-[120px] h-[120px] rounded-full object-cover" />
       <div>
-        <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-gold">
+        <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream">
           {persona.type} · Session {sessionNo} of 2
         </p>
         <h1 className="mt-2 font-bembo text-[34px] leading-[1.05]">{persona.name}{persona.age ? `, ${persona.age}` : ""}</h1>
@@ -399,7 +399,7 @@ function ReadyScreen({
       <button
         type="button"
         onClick={onBegin}
-        className="rounded-pulse-pill bg-coach-gold text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-12 py-4 inline-flex items-center gap-2"
+        className="rounded-pulse-pill bg-coach-cream text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-12 py-4 inline-flex items-center gap-2"
       >
         <Mic size={16} /> Begin session {sessionNo}
       </button>
@@ -431,12 +431,12 @@ function LiveScreen({
         <img src={persona.image} alt={persona.name} className="w-[160px] h-[160px] rounded-full object-cover" />
         <span
           className={`absolute inset-0 rounded-full ring-4 transition-all ${
-            speaking ? "ring-coach-gold animate-pulse" : "ring-coach-cream/20"
+            speaking ? "ring-coach-cream animate-pulse" : "ring-coach-cream/20"
           }`}
         />
       </div>
       <div>
-        <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-gold">
+        <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream">
           {persona.name} · Session {sessionNo} of 2
         </p>
         <p className="mt-3 font-bembo text-[64px] leading-none tabular-nums">{mm}:{ss}</p>
@@ -458,7 +458,7 @@ function LiveScreen({
 function Analyzing({ persona }: { persona: (typeof PERSONAS)[number] }) {
   return (
     <Panel>
-      <div className="w-[90px] h-[90px] rounded-full border-4 border-coach-gold/30 border-t-coach-gold animate-spin" />
+      <div className="w-[90px] h-[90px] rounded-full border-4 border-coach-cream/30 border-t-coach-cream animate-spin" />
       <p className="font-bembo text-[28px]">Scoring the conversation…</p>
       <p className="font-pulse-body text-[13px] text-coach-cream/55">Reading how the moment with {persona.name.split(" ")[0]} landed.</p>
     </Panel>
@@ -481,7 +481,7 @@ function ScoredScreen({
   const isFinal = sessionNo === 2;
   return (
     <Panel>
-      <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-gold">
+      <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream">
         {persona.name} · Session {sessionNo} of 2
       </p>
       <div className="flex items-end gap-8">
@@ -491,7 +491,7 @@ function ScoredScreen({
       <button
         type="button"
         onClick={onNext}
-        className="rounded-pulse-pill bg-coach-gold text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-12 py-4"
+        className="rounded-pulse-pill bg-coach-cream text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-12 py-4"
       >
         {isFinal ? "Submit & continue" : "Begin session 2"}
       </button>
@@ -502,7 +502,7 @@ function ScoredScreen({
 function Score({ label, value, big, highlight }: { label: string; value: number; big?: boolean; highlight?: boolean }) {
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className={`font-bembo leading-none tabular-nums ${big ? "text-[88px]" : "text-[56px] opacity-70"} ${highlight ? "text-coach-gold" : ""}`}>
+      <span className={`font-bembo leading-none tabular-nums ${big ? "text-[88px]" : "text-[56px] opacity-70"} ${highlight ? "text-pulse-success" : ""}`}>
         {value}
         <span className="text-[40%] align-top">%</span>
       </span>
@@ -514,12 +514,12 @@ function Score({ label, value, big, highlight }: { label: string; value: number;
 function DoneScreen({ onReset }: { onReset: () => void }) {
   return (
     <Panel>
-      <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-gold">All three complete</p>
+      <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream">All three complete</p>
       <h1 className="font-bembo text-[40px] leading-[1.05]">Nicely done. Scores are on the board.</h1>
       <button
         type="button"
         onClick={onReset}
-        className="rounded-pulse-pill bg-coach-gold text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-12 py-4"
+        className="rounded-pulse-pill bg-coach-cream text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-12 py-4"
       >
         Reset for next team
       </button>

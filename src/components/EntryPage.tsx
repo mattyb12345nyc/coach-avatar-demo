@@ -34,10 +34,10 @@ export function EntryPage() {
       <div className="min-h-screen bg-coach-black text-coach-cream flex items-center justify-center px-6">
         <div className="w-full max-w-[360px] flex flex-col gap-5 text-center">
           <span className="mx-auto w-12 h-12 rounded-full border border-coach-cream/25 flex items-center justify-center">
-            <Lock size={18} className="text-coach-gold" />
+            <Lock size={18} className="text-coach-cream" />
           </span>
           <div>
-            <p className="font-pulse-ext text-[10px] tracking-[0.3em] uppercase text-coach-gold">Coach Pulse Live · SMC</p>
+            <p className="font-pulse-ext text-[10px] tracking-[0.3em] uppercase text-coach-cream">Coach Pulse Live · SMC</p>
             <h1 className="mt-2 font-bembo text-[30px] leading-tight">Enter the password</h1>
           </div>
           <input
@@ -51,7 +51,7 @@ export function EntryPage() {
           />
           <button
             onClick={submit}
-            className="rounded-pulse-pill bg-coach-gold text-coach-black font-pulse-ext text-[12px] font-medium tracking-[0.12em] uppercase px-10 py-3.5"
+            className="rounded-pulse-pill bg-coach-cream text-coach-black font-pulse-ext text-[12px] font-medium tracking-[0.12em] uppercase px-10 py-3.5"
           >
             Enter
           </button>
@@ -65,7 +65,7 @@ export function EntryPage() {
     <div className="min-h-screen bg-coach-cream flex flex-col">
       <header className="bg-coach-black text-coach-cream px-6 pt-14 pb-12">
         <div className="mx-auto w-full max-w-[760px]">
-          <p className="font-pulse-ext text-[11px] tracking-[0.3em] uppercase font-medium text-coach-gold">
+          <p className="font-pulse-ext text-[11px] tracking-[0.3em] uppercase font-medium text-coach-cream">
             Coach Pulse Live · SMC · The Wynn
           </p>
           <h1 className="mt-3 font-bembo text-[clamp(34px,5vw,52px)] leading-[1.04]">The game site.</h1>

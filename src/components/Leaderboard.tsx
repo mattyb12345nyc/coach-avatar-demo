@@ -68,7 +68,7 @@ export function Leaderboard() {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#09090A" }}>
       <header className="px-8 pt-10 pb-6 text-center">
-        <p className="font-pulse-ext text-[12px] tracking-[0.34em] uppercase font-medium text-coach-gold">
+        <p className="font-pulse-ext text-[12px] tracking-[0.34em] uppercase font-medium text-coach-cream">
           Coach Pulse Live · SMC
         </p>
         <h1 className="mt-2 font-bembo text-[clamp(36px,5vw,68px)] leading-[1.02] text-white">Leaderboard</h1>

@@ -59,19 +59,19 @@
 }
 
 @theme inline {
-  /* Coach palette — April 2026 actual hex values from coach-connect */
-  --color-coach-black: #000001;
-  --color-coach-cream: #FFFFFE;
+  /* Coach palette — canonical Coach Pulse branding (Joon, April 2026) */
+  --color-coach-black: #1C1917;   /* warm near-black — NOT pure black */
+  --color-coach-cream: #F5F0EB;   /* warm app background */
   --color-coach-mahogany: #5c3d2e;
-  --color-coach-gold: #F59E0B;
+  --color-coach-gold: #C9A227;    /* muted antique gold — spice only */
   --color-coach-champagne: #e8dfd0;
 
   /* Pulse semantic tokens — Megan Harvell + Joon spec */
-  --color-pulse-primary: #000001;
-  --color-pulse-secondary: #FFFFFE;
-  --color-pulse-paper: #FFFFFF;
+  --color-pulse-primary: #1C1917;
+  --color-pulse-secondary: #F5F0EB;
+  --color-pulse-paper: #FFFFFF;   /* pure-white card surfaces on cream */
   --color-pulse-paper-warm: #FAFAF8;
-  --color-pulse-stroke: #E5E5E3;
+  --color-pulse-stroke: #E7E5E0;  /* hairline card borders / dividers */
   --color-pulse-rule-warm: #E7E5E4;
   --color-pulse-neutral: #949494;
   --color-pulse-neutral-1: #6D6D6D;
@@ -82,8 +82,8 @@
   --color-pulse-neutral-medium: #575757;
   --color-pulse-neutral-dark: #333333;
   --color-pulse-meta: #6B6B6B;
-  --color-pulse-success: #009D59;
-  --color-pulse-error: #FF6643;
+  --color-pulse-success: #00A676;  /* trend ▲ / ring "personal best" only */
+  --color-pulse-error: #D14343;    /* trend ▼ only — never error states */
   --color-pulse-success-tint: #ECFCF4;
   --color-pulse-warning-tint: #FFFADF;
 

@@ -156,7 +156,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-coach-cream">
       <header className="bg-coach-black text-coach-cream px-6 py-5">
-        <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-gold">Coach Pulse Live · SMC</p>
+        <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-cream">Coach Pulse Live · SMC</p>
         <h1 className="font-pulse-ext text-[18px] font-medium mt-1">Game Points</h1>
       </header>
       <main className="px-5 py-8">{children}</main>

@@ -9,7 +9,7 @@ export default function GuidePage() {
     <div className="min-h-screen bg-coach-cream">
       <header className="bg-coach-black text-coach-cream px-6 pt-12 pb-12">
         <div className="mx-auto max-w-[680px]">
-          <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-gold">Coach Pulse Live · SMC</p>
+          <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-cream">Coach Pulse Live · SMC</p>
           <h1 className="mt-3 font-bembo text-[clamp(32px,5vw,48px)] leading-[1.05]">How the game works</h1>
           <p className="mt-3 font-pulse-body text-[14px] leading-[1.6] text-coach-cream/70 max-w-[560px]">
             Your team earns points two ways: live role plays in the role-play rooms, and the games out on the floor. Highest total wins.
@@ -69,7 +69,7 @@ function Section({ title, sub, children }: { title: string; sub: string; childre
     <section className="flex flex-col gap-3">
       <div>
         <h2 className="font-bembo text-[26px] text-pulse-primary leading-tight">{title}</h2>
-        <p className="font-pulse-ext text-[9px] tracking-[0.2em] uppercase text-coach-gold mt-1">{sub}</p>
+        <p className="font-pulse-ext text-[9px] tracking-[0.2em] uppercase text-pulse-meta mt-1">{sub}</p>
       </div>
       {children}
     </section>
