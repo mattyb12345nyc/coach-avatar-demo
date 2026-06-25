@@ -1,33 +1,49 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Crown } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getBrowserSupabase } from "@/lib/supabase";
-import { MAX_TEAM_TOTAL } from "@/config/event";
 
 type Row = {
   team_id: number;
   label: string;
   color: string | null;
+  number: number | null;
   total: number;
-  persona_points: number;
-  game_points: number;
   personas_done: number;
   games_done: number;
 };
+type Move = "up" | "down" | "same" | null;
 
-// Big-screen live leaderboard for the SMC floor. Vertical, large, legible,
-// self-refreshing (realtime + ~3-min poll fallback per the brief).
+// Venue leaderboard, built to the Pulse "Challenges/Leaderboard-List" design
+// (Figma: Demo Leaderboard). Dark rows, circular team avatar, uppercase
+// Helvetica Neue Extended name, points + divider + rank + movement arrow.
+// Scaled large for the big vertical screen; realtime + ~3-min poll.
 export function Leaderboard() {
   const [rows, setRows] = useState<Row[]>([]);
   const [configured, setConfigured] = useState(true);
+  const prevRanks = useRef<Map<number, number>>(new Map());
+  const [moves, setMoves] = useState<Map<number, Move>>(new Map());
 
   const load = useCallback(async () => {
     try {
       const res = await fetch("/api/leaderboard", { cache: "no-store" });
       const data = await res.json();
       if (data.configured === false) setConfigured(false);
-      if (Array.isArray(data.rows)) setRows(data.rows);
+      if (!Array.isArray(data.rows)) return;
+      const next: Row[] = data.rows;
+
+      // Movement vs the previous standings (drives the up/down arrows).
+      const m = new Map<number, Move>();
+      next.forEach((r, i) => {
+        const rank = i + 1;
+        const prev = prevRanks.current.get(r.team_id);
+        m.set(r.team_id, prev == null ? null : rank < prev ? "up" : rank > prev ? "down" : "same");
+      });
+      const pr = new Map<number, number>();
+      next.forEach((r, i) => pr.set(r.team_id, i + 1));
+      prevRanks.current = pr;
+      setMoves(m);
+      setRows(next);
     } catch {
       /* keep last good state */
     }
@@ -42,43 +58,32 @@ export function Leaderboard() {
         .on("postgres_changes", { event: "*", schema: "public", table: "persona_scores" }, () => load())
         .on("postgres_changes", { event: "*", schema: "public", table: "game_scores" }, () => load())
         .subscribe();
-      // brief: refresh about every three minutes regardless
       const t = setInterval(load, 180000);
-      return () => {
-        sb.removeChannel(ch);
-        clearInterval(t);
-      };
+      return () => { sb.removeChannel(ch); clearInterval(t); };
     }
     const t = setInterval(load, 8000);
     return () => clearInterval(t);
   }, [load]);
 
   return (
-    <div className="min-h-screen bg-coach-black text-coach-cream flex flex-col">
-      <header className="px-8 pt-12 pb-7 text-center">
-        <p className="font-pulse-ext text-[12px] tracking-[0.32em] uppercase font-medium text-coach-gold">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#09090A" }}>
+      <header className="px-8 pt-10 pb-6 text-center">
+        <p className="font-pulse-ext text-[12px] tracking-[0.34em] uppercase font-medium text-coach-gold">
           Coach Pulse Live · SMC
         </p>
-        <h1 className="mt-3 font-bembo text-[clamp(40px,6vw,76px)] leading-[1.02]">Leaderboard</h1>
-        <p className="mt-2 font-pulse-body text-[14px] text-coach-cream/50">
-          Role plays + games · {MAX_TEAM_TOTAL} points possible
-        </p>
+        <h1 className="mt-2 font-bembo text-[clamp(36px,5vw,68px)] leading-[1.02] text-white">Leaderboard</h1>
       </header>
 
-      <main className="flex-1 px-5 sm:px-8 pb-14">
-        <div className="mx-auto w-full max-w-[1000px] flex flex-col gap-2.5">
+      <main className="flex-1 px-4 sm:px-10 pb-10">
+        <div className="mx-auto w-full max-w-[1100px]">
           {!configured && (
-            <p className="text-center font-pulse-body text-coach-cream/60 py-20">
-              Leaderboard isn&apos;t connected yet.
-            </p>
+            <p className="text-center font-pulse-body text-white/50 py-24">Leaderboard isn&apos;t connected yet.</p>
           )}
           {configured && rows.length === 0 && (
-            <p className="text-center font-pulse-body text-coach-cream/60 py-20">
-              Waiting for the first scores to land…
-            </p>
+            <p className="text-center font-pulse-body text-white/50 py-24">Waiting for the first scores to land…</p>
           )}
           {rows.map((r, i) => (
-            <Line key={r.team_id} row={r} rank={i + 1} />
+            <LeaderRow key={r.team_id} row={r} rank={i + 1} move={moves.get(r.team_id) ?? null} />
           ))}
         </div>
       </main>
@@ -86,38 +91,76 @@ export function Leaderboard() {
   );
 }
 
-function Line({ row, rank }: { row: Row; rank: number }) {
-  const leader = rank === 1;
-  const podium = rank <= 3;
+function LeaderRow({ row, rank, move }: { row: Row; rank: number; move: Move }) {
+  const rr = String(rank).padStart(2, "0");
   return (
-    <div
-      className={`flex items-center gap-5 rounded-pulse-card px-6 py-4 ${
-        leader
-          ? "bg-coach-gold text-coach-black"
-          : podium
-            ? "bg-coach-cream/[0.08] border border-coach-gold/40"
-            : "bg-coach-cream/[0.04] border border-coach-cream/10"
-      }`}
-    >
-      <div className="w-12 flex justify-center shrink-0">
-        {leader ? <Crown size={30} strokeWidth={1.5} /> : <span className="font-bembo text-[32px] opacity-90">{rank}</span>}
+    <div className="flex items-center gap-4 sm:gap-6 py-[clamp(12px,1.6vh,22px)] border-b border-white/10">
+      {/* Team avatar — circle with the team number (color-fill when set). */}
+      <div
+        className="shrink-0 rounded-full flex items-center justify-center font-pulse-ext font-medium text-coach-black tabular-nums"
+        style={{
+          width: "clamp(44px,5vw,64px)",
+          height: "clamp(44px,5vw,64px)",
+          fontSize: "clamp(16px,1.8vw,24px)",
+          backgroundColor: row.color || "#FFFFFE",
+        }}
+      >
+        {row.number ?? rank}
       </div>
+
+      {/* Team name — uppercase, extended, wide tracking. */}
       <div className="flex-1 min-w-0">
-        <p className={`font-pulse-ext text-[clamp(18px,2.3vw,26px)] font-medium truncate ${leader ? "text-coach-black" : "text-coach-cream"}`}>
+        <p
+          className="font-pulse-ext font-medium text-white uppercase truncate"
+          style={{ fontSize: "clamp(15px,1.9vw,26px)", letterSpacing: "0.22em" }}
+        >
           {row.label}
         </p>
-        <p className={`font-pulse-body text-[12px] mt-0.5 ${leader ? "text-coach-black/60" : "text-coach-cream/45"}`}>
+        <p className="font-pulse-body text-white/35 mt-0.5" style={{ fontSize: "clamp(10px,0.9vw,13px)" }}>
           {row.personas_done}/3 role plays · {row.games_done}/6 games
         </p>
       </div>
-      <div className="text-right shrink-0">
-        <p className={`font-pulse-ext text-[clamp(26px,3.2vw,38px)] font-medium tabular-nums leading-none ${leader ? "text-coach-black" : "text-coach-cream"}`}>
-          {row.total.toLocaleString()}
-        </p>
-        <p className={`font-pulse-body text-[10px] tracking-[0.16em] uppercase mt-1 ${leader ? "text-coach-black/55" : "text-coach-cream/40"}`}>
-          points
-        </p>
+
+      {/* Right cluster: points · divider · rank · arrow */}
+      <div className="flex items-center gap-[clamp(10px,1.4vw,22px)] shrink-0">
+        <span className="font-pulse-body tabular-nums" style={{ color: "#9E9E9E", fontSize: "clamp(12px,1.2vw,18px)" }}>
+          {row.total.toLocaleString()}pts
+        </span>
+        <span className="bg-white/20" style={{ width: 1, height: "clamp(18px,2vw,30px)" }} />
+        <span
+          className="font-pulse-ext font-medium text-white tabular-nums text-right"
+          style={{ fontSize: "clamp(22px,2.8vw,40px)", minWidth: "1.6em" }}
+        >
+          {rr}
+        </span>
+        <MoveArrow move={move} />
       </div>
     </div>
+  );
+}
+
+function MoveArrow({ move }: { move: Move }) {
+  // Green up / red down with a soft radial glow; neutral when unchanged.
+  const up = move === "up";
+  const down = move === "down";
+  const color = up ? "#0FAE5E" : down ? "#FF2B1C" : "rgba(255,255,255,0.25)";
+  const glow = up ? "rgba(15,174,94,0.35)" : down ? "rgba(255,43,28,0.32)" : "transparent";
+  return (
+    <span
+      className="flex items-center justify-center rounded-full shrink-0"
+      style={{
+        width: "clamp(28px,3vw,40px)",
+        height: "clamp(28px,3vw,40px)",
+        background: `radial-gradient(circle, ${glow} 0%, transparent 70%)`,
+      }}
+    >
+      <svg viewBox="0 0 14 12" style={{ width: "clamp(10px,1.2vw,15px)", height: "auto" }}>
+        {down ? (
+          <path d="M7 12 L0 1 L14 1 Z" fill={color} />
+        ) : (
+          <path d="M7 0 L14 11 L0 11 Z" fill={color} />
+        )}
+      </svg>
+    </span>
   );
 }
