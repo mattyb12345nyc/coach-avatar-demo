@@ -5,6 +5,8 @@ import { useConversation } from "@elevenlabs/react";
 import { Mic } from "lucide-react";
 import { PERSONAS, LANGUAGES, EVENT_CONFIG, resolveAgentId } from "@/config/event";
 import { requestMicPermission } from "@/lib/requestMicPermission";
+import { ScoreBreakdown } from "@/components/room/ScoreBreakdown";
+import type { ScoringResult } from "@/lib/types";
 
 type Team = { id: number; label: string };
 type Phase = "start" | "ready" | "live" | "scoring" | "scored" | "done";
@@ -22,6 +24,7 @@ export function RoomApp() {
   const [sessionNo, setSessionNo] = useState<1 | 2>(1);
   const [sessionScores, setSessionScores] = useState<number[]>([]); // this persona
   const [lastScore, setLastScore] = useState<number | null>(null);
+  const [lastResult, setLastResult] = useState<ScoringResult | null>(null);
   const [remaining, setRemaining] = useState<number>(CAP);
   const [error, setError] = useState<string | null>(null);
 
@@ -93,9 +96,10 @@ export function RoomApp() {
         }
       }
 
-      // Score it (same rubric as the app). Too-short => 0 for this session.
+      // Score it (same rubric as the app). Capture the FULL result for the
+      // descriptive breakdown. Too-short / failure => 0 for this session.
       let percentage = 0;
-      let scores: unknown = null;
+      let result: ScoringResult | null = null;
       try {
         const res = await fetch("/api/score", {
           method: "POST",
@@ -111,10 +115,21 @@ export function RoomApp() {
         const d = await res.json();
         if (res.ok && typeof d.overall_score === "number") {
           percentage = Math.round(d.overall_score);
-          scores = d.scores ?? null;
+          result = d as ScoringResult;
         }
       } catch {
         /* percentage stays 0 */
+      }
+      const scores = result?.scores ?? null;
+      if (!result) {
+        result = {
+          scores: { understandingTheMoment: 0, exploringTogether: 0, guidingTheDecision: 0, emotionalConnection: 0, culturalRelevance: 0, productKnowledge: 0 },
+          overall_score: percentage,
+          stars: 1,
+          highlights: [],
+          summary: "We couldn't fully read this one — the conversation may have been too short. Give it another go.",
+          recommendedNextFeedback: "Aim for a couple of natural back-and-forth turns before the timer ends.",
+        };
       }
 
       // Log the session (best-effort).
@@ -136,6 +151,7 @@ export function RoomApp() {
 
       setSessionScores((prev) => [...prev, percentage]);
       setLastScore(percentage);
+      setLastResult(result);
       setPhase("scored");
       endingRef.current = false;
     },
@@ -221,6 +237,19 @@ export function RoomApp() {
 
   const bestSoFar = Math.max(...(sessionScores.length ? sessionScores : [0]));
 
+  // The score breakdown takes over the whole screen (its own light layout).
+  if (phase === "scored" && lastResult) {
+    return (
+      <ScoreBreakdown
+        result={lastResult}
+        personaName={persona.name}
+        sessionNo={sessionNo}
+        best={bestSoFar}
+        onNext={afterScored}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-coach-black text-coach-cream flex flex-col">
       <TopBar phase={phase} personaIdx={personaIdx} teamId={teamId} teams={teams} />
@@ -257,16 +286,6 @@ export function RoomApp() {
         )}
 
         {phase === "scoring" && <Analyzing persona={persona} />}
-
-        {phase === "scored" && (
-          <ScoredScreen
-            persona={persona}
-            sessionNo={sessionNo}
-            lastScore={lastScore ?? 0}
-            best={bestSoFar}
-            onNext={afterScored}
-          />
-        )}
 
         {phase === "done" && <DoneScreen onReset={resetRoom} />}
       </div>
@@ -465,51 +484,6 @@ function Analyzing({ persona }: { persona: (typeof PERSONAS)[number] }) {
   );
 }
 
-function ScoredScreen({
-  persona,
-  sessionNo,
-  lastScore,
-  best,
-  onNext,
-}: {
-  persona: (typeof PERSONAS)[number];
-  sessionNo: 1 | 2;
-  lastScore: number;
-  best: number;
-  onNext: () => void;
-}) {
-  const isFinal = sessionNo === 2;
-  return (
-    <Panel>
-      <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream">
-        {persona.name} · Session {sessionNo} of 2
-      </p>
-      <div className="flex items-end gap-8">
-        <Score label={`Session ${sessionNo}`} value={lastScore} big={!isFinal} />
-        {isFinal && <Score label="Best of two" value={best} big highlight />}
-      </div>
-      <button
-        type="button"
-        onClick={onNext}
-        className="rounded-pulse-pill bg-coach-cream text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-12 py-4"
-      >
-        {isFinal ? "Submit & continue" : "Begin session 2"}
-      </button>
-    </Panel>
-  );
-}
-
-function Score({ label, value, big, highlight }: { label: string; value: number; big?: boolean; highlight?: boolean }) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <span className={`font-bembo leading-none tabular-nums ${big ? "text-[88px]" : "text-[56px] opacity-70"} ${highlight ? "text-pulse-success" : ""}`}>
-        {value}
-        <span className="text-[40%] align-top">%</span>
-      </span>
-      <span className="font-pulse-ext text-[9px] tracking-[0.2em] uppercase text-coach-cream/55">{label}</span>
-    </div>
-  );
-}
 
 function DoneScreen({ onReset }: { onReset: () => void }) {
   return (
