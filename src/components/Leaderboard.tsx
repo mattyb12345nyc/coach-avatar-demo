@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getBrowserSupabase } from "@/lib/supabase";
+import { BackToMenu } from "@/components/BackToMenu";
 
 type Row = {
   team_id: number;
@@ -66,7 +67,8 @@ export function Leaderboard() {
   }, [load]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#09090A" }}>
+    <div className="min-h-screen flex flex-col relative" style={{ backgroundColor: "#09090A" }}>
+      <div className="absolute top-5 left-6 z-10"><BackToMenu tone="dark" /></div>
       <header className="px-8 pt-10 pb-6 text-center">
         <p className="font-pulse-ext text-[12px] tracking-[0.34em] uppercase font-medium text-coach-cream">
           Coach Pulse Live · SMC

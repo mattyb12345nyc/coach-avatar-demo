@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PERSONAS, GAMES, EVENT_CONFIG, MAX_TEAM_TOTAL } from "@/config/event";
+import { BackToMenu } from "@/components/BackToMenu";
 
 export const metadata: Metadata = { title: "Coach Pulse — How the Game Works" };
 
@@ -9,6 +10,7 @@ export default function GuidePage() {
     <div className="min-h-screen bg-coach-cream">
       <header className="bg-coach-black text-coach-cream px-6 pt-12 pb-12">
         <div className="mx-auto max-w-[680px]">
+          <div className="mb-5"><BackToMenu tone="dark" /></div>
           <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-cream">Coach Pulse Live · SMC</p>
           <h1 className="mt-3 font-bembo text-[clamp(32px,5vw,48px)] leading-[1.05]">How the game works</h1>
           <p className="mt-3 font-pulse-body text-[14px] leading-[1.6] text-coach-cream/70 max-w-[560px]">

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { GAMES } from "@/config/event";
+import { BackToMenu } from "@/components/BackToMenu";
 
 const PASS_KEY = "coachpulse.admin";
 type Team = { id: number; label: string };
@@ -156,6 +157,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-coach-cream">
       <header className="bg-coach-black text-coach-cream px-6 py-5">
+        <div className="mb-3"><BackToMenu tone="dark" /></div>
         <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-cream">Coach Pulse Live · SMC</p>
         <h1 className="font-pulse-ext text-[18px] font-medium mt-1">Game Points</h1>
       </header>

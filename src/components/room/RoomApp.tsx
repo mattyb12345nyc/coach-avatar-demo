@@ -6,6 +6,7 @@ import { Mic } from "lucide-react";
 import { PERSONAS, LANGUAGES, EVENT_CONFIG, resolveAgentId } from "@/config/event";
 import { requestMicPermission } from "@/lib/requestMicPermission";
 import { ScoreBreakdown } from "@/components/room/ScoreBreakdown";
+import { BackToMenu } from "@/components/BackToMenu";
 import type { ScoringResult } from "@/lib/types";
 
 type Team = { id: number; label: string };
@@ -313,9 +314,12 @@ function TopBar({
   const teamLabel = teams.find((t) => t.id === teamId)?.label;
   return (
     <header className="px-6 py-4 flex items-center justify-between border-b border-coach-cream/10">
-      <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-cream">
-        Coach Pulse Live · Role-Play Room
-      </p>
+      <div className="flex items-center gap-4">
+        <BackToMenu tone="dark" />
+        <p className="font-pulse-ext text-[10px] tracking-[0.28em] uppercase text-coach-cream/50">
+          Role-Play Room
+        </p>
+      </div>
       <div className="flex items-center gap-4 font-pulse-body text-[12px] text-coach-cream/60">
         {teamLabel && phase !== "start" && <span>{teamLabel}</span>}
         {phase !== "start" && (
