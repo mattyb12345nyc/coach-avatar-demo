@@ -6,11 +6,28 @@ import { Mic } from "lucide-react";
 import { PERSONAS, LANGUAGES, EVENT_CONFIG, resolveAgentId } from "@/config/event";
 import { requestMicPermission } from "@/lib/requestMicPermission";
 import { ScoreBreakdown } from "@/components/room/ScoreBreakdown";
+import { SessionSummary, type SummaryData, type PersonaSummary } from "@/components/room/SessionSummary";
 import { BackToMenu } from "@/components/BackToMenu";
 import type { ScoringResult } from "@/lib/types";
 
+type PersonaRec = PersonaSummary & { highlights: ScoringResult["highlights"] };
+
+function splitHighlights(hs: ScoringResult["highlights"]) {
+  const strengths: string[] = [];
+  const improvements: string[] = [];
+  for (const h of hs || []) {
+    if (typeof h === "string") strengths.push(h);
+    else if (h && typeof h.text === "string") {
+      if (h.type === "improvement") improvements.push(h.text);
+      else strengths.push(h.text);
+    }
+  }
+  return { strengths, improvements };
+}
+const dedupe = (a: string[]) => Array.from(new Set(a.map((s) => s.trim()).filter(Boolean)));
+
 type Team = { id: number; label: string };
-type Phase = "start" | "ready" | "live" | "scoring" | "scored" | "done";
+type Phase = "start" | "ready" | "live" | "scoring" | "scored" | "summary";
 type Line = { role: "user" | "avatar"; text: string };
 
 const CAP = EVENT_CONFIG.personaCapSeconds; // 4 min
@@ -26,6 +43,9 @@ export function RoomApp() {
   const [sessionScores, setSessionScores] = useState<number[]>([]); // this persona
   const [lastScore, setLastScore] = useState<number | null>(null);
   const [lastResult, setLastResult] = useState<ScoringResult | null>(null);
+  const [sessionResults, setSessionResults] = useState<ScoringResult[]>([]); // this persona's takes
+  const [summary, setSummary] = useState<SummaryData | null>(null);
+  const personaRecsRef = useRef<PersonaRec[]>([]); // accumulates across the 3 personas
   const [remaining, setRemaining] = useState<number>(CAP);
   const [error, setError] = useState<string | null>(null);
 
@@ -151,6 +171,7 @@ export function RoomApp() {
       }
 
       setSessionScores((prev) => [...prev, percentage]);
+      setSessionResults((prev) => [...prev, result]);
       setLastScore(percentage);
       setLastResult(result);
       setPhase("scored");
@@ -196,26 +217,72 @@ export function RoomApp() {
   // Lock this persona's score (server keeps the higher of the team's logged
   // takes) and advance to the next persona — or finish after persona 3.
   const submitAndAdvance = useCallback(() => {
-    const best = Math.max(...sessionScores, lastScore ?? 0);
+    // Best take for this persona — its score AND its full result (for feedback).
+    const scores = sessionScores.length ? sessionScores : [lastScore ?? 0];
+    const results = sessionResults.length ? sessionResults : lastResult ? [lastResult] : [];
+    let bi = 0;
+    for (let i = 1; i < scores.length; i++) if (scores[i] > scores[bi]) bi = i;
+    const bestScore = scores[bi] ?? 0;
+    const bestResult = results[bi] ?? lastResult;
+    personaRecsRef.current = [
+      ...personaRecsRef.current,
+      {
+        slug: persona.slug,
+        name: persona.name,
+        score: bestScore,
+        stars: bestResult?.stars ?? 1,
+        summary: bestResult?.summary ?? "",
+        recommendedNext: bestResult?.recommendedNextFeedback ?? "",
+        highlights: bestResult?.highlights ?? [],
+      },
+    ];
     if (teamId != null) {
       fetch("/api/persona-submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamId, personaSlug: persona.slug, bestPercentage: best }),
+        body: JSON.stringify({ teamId, personaSlug: persona.slug, bestPercentage: bestScore }),
       }).catch(() => {});
     }
+
     const next = personaIdx + 1;
     if (next >= PERSONAS.length) {
-      setPhase("done");
+      // All 3 done → build + store the team summary.
+      const recs = personaRecsRef.current;
+      const average = Math.round(recs.reduce((s, r) => s + r.score, 0) / Math.max(recs.length, 1));
+      const strengths: string[] = [];
+      const growth: string[] = [];
+      for (const r of recs) {
+        const sp = splitHighlights(r.highlights);
+        strengths.push(...sp.strengths);
+        growth.push(...sp.improvements);
+      }
+      const teamName = teams.find((t) => t.id === teamId)?.label ?? `Team ${teamId ?? ""}`;
+      const data: SummaryData = {
+        teamName,
+        average,
+        personas: recs.map(({ slug, name, score, stars, summary: s, recommendedNext }) => ({ slug, name, score, stars, summary: s, recommendedNext })),
+        strengths: dedupe(strengths).slice(0, 6),
+        growthAreas: dedupe(growth).slice(0, 6),
+      };
+      setSummary(data);
+      setPhase("summary");
+      if (teamId != null) {
+        fetch("/api/team-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ teamId, average, payload: data }),
+        }).catch(() => {});
+      }
     } else {
       setPersonaIdx(next);
       setSessionNo(1);
       setSessionScores([]);
+      setSessionResults([]);
       setLastScore(null);
       setLastResult(null);
       setPhase("ready");
     }
-  }, [sessionScores, lastScore, teamId, persona, personaIdx]);
+  }, [sessionScores, sessionResults, lastScore, lastResult, teamId, persona, personaIdx, teams]);
 
   // Take 1 "Try again" → run take 2 for the same persona.
   const retryPersona = useCallback(() => {
@@ -231,7 +298,11 @@ export function RoomApp() {
     setPersonaIdx(0);
     setSessionNo(1);
     setSessionScores([]);
+    setSessionResults([]);
     setLastScore(null);
+    setLastResult(null);
+    setSummary(null);
+    personaRecsRef.current = [];
     setRemaining(CAP);
     setError(null);
   }, []);
@@ -253,6 +324,11 @@ export function RoomApp() {
         onSubmit={submitAndAdvance}
       />
     );
+  }
+
+  // End-of-session team summary (after persona 3).
+  if (phase === "summary" && summary) {
+    return <SessionSummary data={summary} onStartNext={resetRoom} />;
   }
 
   return (
@@ -291,8 +367,6 @@ export function RoomApp() {
         )}
 
         {phase === "scoring" && <Analyzing persona={persona} />}
-
-        {phase === "done" && <DoneScreen onReset={resetRoom} />}
       </div>
     </div>
   );
@@ -492,19 +566,3 @@ function Analyzing({ persona }: { persona: (typeof PERSONAS)[number] }) {
   );
 }
 
-
-function DoneScreen({ onReset }: { onReset: () => void }) {
-  return (
-    <Panel>
-      <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream">All three complete</p>
-      <h1 className="font-bembo text-[40px] leading-[1.05]">Nicely done. Scores are on the board.</h1>
-      <button
-        type="button"
-        onClick={onReset}
-        className="rounded-pulse-pill bg-coach-cream text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-12 py-4"
-      >
-        Reset for next team
-      </button>
-    </Panel>
-  );
-}
