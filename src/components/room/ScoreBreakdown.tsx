@@ -12,13 +12,17 @@ export function ScoreBreakdown({
   personaName,
   sessionNo,
   best,
-  onNext,
+  onKeep,
+  onRetry,
+  onSubmit,
 }: {
   result: ScoringResult;
   personaName: string;
   sessionNo: 1 | 2;
   best: number;
-  onNext: () => void;
+  onKeep: () => void; // take 1: keep this score, move on
+  onRetry: () => void; // take 1: try again (take 2)
+  onSubmit: () => void; // take 2: lock in the best of the two
 }) {
   const overall = Math.round(result.overall_score);
   const stars = Math.max(1, Math.min(5, result.stars || 1));
@@ -40,7 +44,8 @@ export function ScoreBreakdown({
       {/* Hero — score + stars */}
       <header className="bg-coach-black text-coach-cream px-6 pt-10 pb-12 text-center">
         <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream/70">
-          {personaName} · Session {sessionNo} of 2
+          {personaName} · Take {sessionNo}
+          {sessionNo === 1 ? "" : " of 2"}
         </p>
         <div className="mt-3 flex items-end justify-center gap-8">
           <div className="flex flex-col items-center">
@@ -53,7 +58,7 @@ export function ScoreBreakdown({
                 <Star key={i} size={14} className={i <= stars ? "text-coach-cream" : "text-coach-cream/25"} fill={i <= stars ? "currentColor" : "transparent"} />
               ))}
             </div>
-            <span className="mt-1 font-pulse-ext text-[9px] tracking-[0.2em] uppercase text-coach-cream/50">Session {sessionNo}</span>
+            <span className="mt-1 font-pulse-ext text-[9px] tracking-[0.2em] uppercase text-coach-cream/50">Take {sessionNo}</span>
           </div>
           {isFinal && (
             <div className="flex flex-col items-center">
@@ -98,13 +103,32 @@ export function ScoreBreakdown({
             </section>
           )}
 
-          <button
-            type="button"
-            onClick={onNext}
-            className="mt-1 w-full rounded-pulse-pill bg-coach-black text-coach-cream font-pulse-ext text-[12px] font-medium tracking-[0.12em] uppercase px-10 py-4"
-          >
-            {isFinal ? "Submit & continue" : "Begin session 2"}
-          </button>
+          {isFinal ? (
+            <button
+              type="button"
+              onClick={onSubmit}
+              className="mt-1 w-full rounded-pulse-pill bg-coach-black text-coach-cream font-pulse-ext text-[12px] font-medium tracking-[0.12em] uppercase px-10 py-4"
+            >
+              Submit best of two &amp; continue
+            </button>
+          ) : (
+            <div className="mt-1 flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={onKeep}
+                className="w-full rounded-pulse-pill bg-coach-black text-coach-cream font-pulse-ext text-[12px] font-medium tracking-[0.12em] uppercase px-10 py-4"
+              >
+                Keep this score &amp; continue
+              </button>
+              <button
+                type="button"
+                onClick={onRetry}
+                className="w-full rounded-pulse-pill border border-coach-black/30 text-coach-black font-pulse-ext text-[12px] font-medium tracking-[0.12em] uppercase px-10 py-3.5 hover:bg-coach-black/5"
+              >
+                Try again (best of the two counts)
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </div>

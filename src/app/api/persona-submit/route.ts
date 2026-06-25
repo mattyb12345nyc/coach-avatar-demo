@@ -30,10 +30,14 @@ export async function POST(request: NextRequest) {
     .select("percentage")
     .eq("team_id", b.teamId)
     .eq("persona_slug", b.personaSlug);
-  let best = (rows ?? []).reduce((m, r) => Math.max(m, r.percentage ?? 0), 0);
-  if ((!rows || rows.length === 0) && typeof b.bestPercentage === "number") {
-    best = Math.max(0, Math.min(100, Math.round(b.bestPercentage)));
-  }
+  // Higher of the takes — combine the server's logged sessions with the
+  // client's known best so a lagging session insert never loses a good take.
+  const serverBest = (rows ?? []).reduce((m, r) => Math.max(m, r.percentage ?? 0), 0);
+  const clientBest =
+    typeof b.bestPercentage === "number"
+      ? Math.max(0, Math.min(100, Math.round(b.bestPercentage)))
+      : 0;
+  const best = Math.max(serverBest, clientBest);
 
   const { error } = await sb
     .from("persona_scores")

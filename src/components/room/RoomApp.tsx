@@ -192,14 +192,9 @@ export function RoomApp() {
     }
   }, [conversation, persona, language, finishSession]);
 
-  // After a scored session: advance to session 2, or submit the persona.
-  const afterScored = useCallback(async () => {
-    if (sessionNo === 1) {
-      setSessionNo(2);
-      setPhase("ready");
-      return;
-    }
-    // session 2 done -> submit best of two, advance persona.
+  // Lock this persona's score (server keeps the higher of the team's logged
+  // takes) and advance to the next persona — or finish after persona 3.
+  const submitAndAdvance = useCallback(() => {
     const best = Math.max(...sessionScores, lastScore ?? 0);
     if (teamId != null) {
       fetch("/api/persona-submit", {
@@ -216,9 +211,16 @@ export function RoomApp() {
       setSessionNo(1);
       setSessionScores([]);
       setLastScore(null);
+      setLastResult(null);
       setPhase("ready");
     }
-  }, [sessionNo, sessionScores, lastScore, teamId, persona, personaIdx]);
+  }, [sessionScores, lastScore, teamId, persona, personaIdx]);
+
+  // Take 1 "Try again" → run take 2 for the same persona.
+  const retryPersona = useCallback(() => {
+    setSessionNo(2);
+    setPhase("ready");
+  }, []);
 
   const resetRoom = useCallback(() => {
     clearTimer();
@@ -245,7 +247,9 @@ export function RoomApp() {
         personaName={persona.name}
         sessionNo={sessionNo}
         best={bestSoFar}
-        onNext={afterScored}
+        onKeep={submitAndAdvance}
+        onRetry={retryPersona}
+        onSubmit={submitAndAdvance}
       />
     );
   }
@@ -410,7 +414,7 @@ function ReadyScreen({
       <img src={persona.image} alt={persona.name} className="w-[120px] h-[120px] rounded-full object-cover" />
       <div>
         <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream">
-          {persona.type} · Session {sessionNo} of 2
+          {persona.type} · {sessionNo === 1 ? "Take 1" : "Take 2 · retry"}
         </p>
         <h1 className="mt-2 font-bembo text-[34px] leading-[1.05]">{persona.name}{persona.age ? `, ${persona.age}` : ""}</h1>
         <p className="mt-3 font-pulse-body text-[15px] leading-[1.55] text-coach-cream/75 max-w-[460px]">{persona.scenario}</p>
@@ -420,7 +424,7 @@ function ReadyScreen({
         onClick={onBegin}
         className="rounded-pulse-pill bg-coach-cream text-coach-black font-pulse-ext text-[13px] font-medium tracking-[0.12em] uppercase px-12 py-4 inline-flex items-center gap-2"
       >
-        <Mic size={16} /> Begin session {sessionNo}
+        <Mic size={16} /> Begin take {sessionNo}
       </button>
       <p className="font-pulse-body text-[12px] text-coach-cream/45">4-minute cap · speak naturally into the mic</p>
       {error && <p className="font-pulse-body text-[13px] text-pulse-error">{error}</p>}
@@ -456,7 +460,7 @@ function LiveScreen({
       </div>
       <div>
         <p className="font-pulse-ext text-[10px] tracking-[0.22em] uppercase text-coach-cream">
-          {persona.name} · Session {sessionNo} of 2
+          {persona.name} · Take {sessionNo}
         </p>
         <p className="mt-3 font-bembo text-[64px] leading-none tabular-nums">{mm}:{ss}</p>
         <p className="mt-2 font-pulse-body text-[13px] text-coach-cream/60 inline-flex items-center gap-2">

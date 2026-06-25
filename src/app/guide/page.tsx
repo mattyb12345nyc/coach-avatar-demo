@@ -19,11 +19,11 @@ export default function GuidePage() {
 
       <main className="px-5 py-10">
         <div className="mx-auto max-w-[680px] flex flex-col gap-10">
-          <Section title="The role plays" sub={`3 personas · best of 2 · up to ${EVENT_CONFIG.personaMax} pts each`}>
+          <Section title="The role plays" sub={`3 personas · keep or retry · up to ${EVENT_CONFIG.personaMax} pts each`}>
             <p className="font-pulse-body text-[14px] leading-[1.6] text-pulse-neutral-dark mb-4">
-              In a role-play room, one teammate steps up and has a real spoken conversation with a customer.
-              Each persona is run <strong>twice</strong> ({Math.round(EVENT_CONFIG.personaCapSeconds / 60)} minutes each) — your <strong>best score counts</strong>.
-              You&apos;ll do all three.
+              In a role-play room, one teammate steps up and has a real spoken conversation with a customer
+              ({Math.round(EVENT_CONFIG.personaCapSeconds / 60)} minutes each). After each one you see your score, then <strong>keep it or try once more</strong> — if you retry, the <strong>higher of the two counts</strong>.
+              You&apos;ll do all three personas this way.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {PERSONAS.map((p) => (
