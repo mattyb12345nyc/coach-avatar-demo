@@ -57,6 +57,7 @@ export const PERSONAS: Persona[] = [
       ko: "agent_9601kvezmyncfscrs0p83e6n28m0",
       zh: "agent_8301kvg3kmkrfv5sv0dfw8yfeht2",
       "zh-HK": "agent_5001kvg1bf8web8rcapt8gp4f135",
+      pt: "agent_7401kw9vj0dvep1vg89x55zv7d93",
     },
     scenarioMode: "decision",
     sortOrder: 1,
@@ -84,6 +85,7 @@ export const PERSONAS: Persona[] = [
       ko: "agent_4001kveytd40fwvbngkx8c300wvq",
       zh: "agent_1001kvg2q0p5fets6sfyxady70mp",
       "zh-HK": "agent_3001kvfzkvkffem914jjcyp5jrh8",
+      pt: "agent_3001kw9tqg4qfgnv5f21hgyvjgdh",
     },
     scenarioMode: "decision",
     sortOrder: 2,
@@ -111,6 +113,7 @@ export const PERSONAS: Persona[] = [
       ko: "agent_6301kvf0mkexf8rvy1h2sxcvd7aw",
       zh: "agent_2201kvg4mmgbfpza868653q00sad",
       "zh-HK": "agent_5301kvg28rnqew2a0z3d7mj9q5av",
+      pt: "agent_0201kw9wbw2wf8ksm67y05cep7rz",
     },
     scenarioMode: "decision",
     sortOrder: 3,
@@ -129,11 +132,12 @@ export const GAMES: Game[] = [
 ];
 
 // Only languages we have ElevenLabs twin agents for (per persona). Portuguese
-// has no twin yet — per the brief, those CI LatAm teams run in Spanish.
+// twins added for the CI LatAm attendees at SMC.
 export const LANGUAGES: Language[] = [
   { code: "en", label: "English" },
   { code: "es", label: "Español" },
   { code: "fr", label: "Français" },
+  { code: "pt", label: "Português" },
   { code: "it", label: "Italiano" },
   { code: "de", label: "Deutsch" },
   { code: "ja", label: "日本語" },

@@ -82,14 +82,12 @@ export function EntryPage() {
             icon={Mic}
             title="Role-Play Room"
             staff
-            url="/room"
             desc="The single room screen. Pick team + language, run the 3 voice personas (2 sessions each, 4-min cap, best of 2), submit, reset. Full-screen on the room laptop, mouse-driven."
           />
           <Card
             href="/leaderboard"
             icon={Trophy}
             title="Live Leaderboard"
-            url="/leaderboard"
             desc="Team standings for the big screen — role plays + games, 390 points possible. Self-refreshing with live rank-movement arrows."
           />
           <Card
@@ -97,14 +95,12 @@ export function EntryPage() {
             icon={SlidersHorizontal}
             title="Game Points (Admin)"
             staff
-            url="/admin"
             desc="Station leaders enter the 6 floor games' points per team (0–15 each). Its own passcode. Feeds the leaderboard live."
           />
           <Card
             href="/guide"
             icon={BookOpen}
             title="How the Game Works"
-            url="/guide"
             desc="Player-facing guide + scoring breakdown. This is what the demo-app popup links to."
           />
         </div>
@@ -122,14 +118,12 @@ function Card({
   icon: Icon,
   title,
   desc,
-  url,
   staff,
 }: {
   href: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
   title: string;
   desc: string;
-  url: string;
   staff?: boolean;
 }) {
   return (
@@ -151,7 +145,6 @@ function Card({
           <ArrowUpRight size={14} className="text-pulse-neutral group-hover:text-coach-black transition-colors" />
         </p>
         <p className="mt-1 font-pulse-body text-[13px] leading-[1.5] text-pulse-neutral-1">{desc}</p>
-        <code className="mt-2 inline-block font-pulse-body text-[11px] text-pulse-meta bg-pulse-neutral-light rounded-pulse px-2 py-0.5">{url}</code>
       </div>
     </Link>
   );
