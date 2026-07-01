@@ -82,7 +82,7 @@ export function EntryPage() {
             icon={Mic}
             title="Role-Play Room"
             staff
-            desc="The single room screen. Pick team + language, run the 3 voice personas (2 sessions each, 4-min cap, best of 2), submit, reset. Full-screen on the room laptop, mouse-driven."
+            desc="The single room screen. Pick team + language, run the 3 voice personas (4-min cap, keep or retry — best take counts), then the team summary. Full-screen on the room laptop, mouse-driven."
           />
           <Card
             href="/leaderboard"
