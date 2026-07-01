@@ -36,7 +36,8 @@ export async function POST() {
         { status: 502 },
       );
     }
-    return NextResponse.json({ sessionToken });
+    // sessionId lets the client force-stop the server session (watchdog/pagehide).
+    return NextResponse.json({ sessionToken, sessionId: data?.data?.session_id ?? null });
   } catch {
     return NextResponse.json({ error: "Could not reach LiveAvatar" }, { status: 502 });
   }

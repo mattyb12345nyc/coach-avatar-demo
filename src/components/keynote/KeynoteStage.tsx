@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { LiveAvatarSession } from "@heygen/liveavatar-web-sdk";
+import { LiveAvatarSession, SessionEvent, AgentEventsEnum } from "@heygen/liveavatar-web-sdk";
 import { Mic } from "lucide-react";
 import { requestMicPermission } from "@/lib/requestMicPermission";
 
@@ -30,6 +30,8 @@ export function KeynoteStage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sessionRef = useRef<LiveAvatarSession | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rafRef = useRef<number>(0);
   const [stage, setStage] = useState<Stage>("idle");
   const [speaking, setSpeaking] = useState(false);
@@ -102,18 +104,41 @@ export function KeynoteStage() {
     rafRef.current = requestAnimationFrame(draw);
   }, []);
 
-  const end = useCallback(async () => {
+  // Tear the session down on BOTH ends: SDK stop + raw LiveKit disconnect
+  // (stop() no-ops unless the SDK reached CONNECTED), then a server-side
+  // force-stop so abandoned sessions don't keep consuming credits.
+  const teardown = useCallback((s: LiveAvatarSession | null) => {
+    if (watchdogRef.current) clearTimeout(watchdogRef.current);
+    try {
+      s?.stop().catch(() => {});
+    } catch {
+      /* not connected */
+    }
+    try {
+      (s as unknown as { room?: { disconnect: () => Promise<void> } })?.room?.disconnect()?.catch?.(() => {});
+    } catch {
+      /* already disconnected */
+    }
+    const id = sessionIdRef.current;
+    if (id) {
+      sessionIdRef.current = null;
+      fetch("/api/liveavatar/stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: id }),
+        keepalive: true, // survives pagehide
+      }).catch(() => {});
+    }
+  }, []);
+
+  const end = useCallback(() => {
     stopRender();
     const s = sessionRef.current;
     sessionRef.current = null;
     setStage("idle");
     setSpeaking(false);
-    try {
-      await s?.stop();
-    } catch {
-      /* already gone */
-    }
-  }, []);
+    teardown(s);
+  }, [teardown]);
 
   const begin = useCallback(async () => {
     setError(null);
@@ -123,50 +148,77 @@ export function KeynoteStage() {
       const res = await fetch("/api/liveavatar/token", { method: "POST" });
       const d = await res.json();
       if (!res.ok || !d.sessionToken) throw new Error(d.error || "Could not start the session");
+      sessionIdRef.current = d.sessionId ?? null;
 
-      const session = new LiveAvatarSession(d.sessionToken, { voiceChat: true });
+      // voiceChat: false — we start the mic ourselves on stream-ready. The
+      // SDK's start() awaits its event websocket with NO error/timeout path,
+      // so it can hang forever even while the LiveKit media room is healthy.
+      // Nothing below waits on start(): the stream-ready event (pure LiveKit)
+      // flips the UI live, and agent events also arrive via the data channel.
+      const session = new LiveAvatarSession(d.sessionToken, { voiceChat: false });
       sessionRef.current = session;
-      // Speaking indicator — event names are loose across SDK builds, so listen defensively.
-      (session as unknown as { on: (e: string, cb: (...a: unknown[]) => void) => void }).on?.(
-        "avatar_start_talking",
-        () => setSpeaking(true),
-      );
-      (session as unknown as { on: (e: string, cb: (...a: unknown[]) => void) => void }).on?.(
-        "avatar_stop_talking",
-        () => setSpeaking(false),
-      );
-      await session.start();
-      const video = videoRef.current;
-      if (video) {
-        session.attach(video);
-        await video.play().catch(() => {});
-      }
-      setStage("live");
-      startRender();
+      let ready = false;
+
+      session.on(AgentEventsEnum.AVATAR_SPEAK_STARTED, () => setSpeaking(true));
+      session.on(AgentEventsEnum.AVATAR_SPEAK_ENDED, () => setSpeaking(false));
+      session.on(SessionEvent.SESSION_STREAM_READY, () => {
+        ready = true;
+        if (watchdogRef.current) clearTimeout(watchdogRef.current);
+        const video = videoRef.current;
+        if (video) {
+          session.attach(video);
+          video.play().catch(() => {});
+        }
+        session.voiceChat.start({}).catch(() => {});
+        setStage("live");
+        startRender();
+      });
+
+      const bail = (msg: string) => {
+        if (ready || sessionRef.current !== session) return;
+        sessionRef.current = null;
+        teardown(session);
+        setError(msg);
+        setStage("idle");
+      };
+
+      // If the avatar stream hasn't arrived in 25s, reset cleanly for a retry.
+      watchdogRef.current = setTimeout(() => bail("Joon couldn't connect. Tap to try again."), 25_000);
+
+      session.start().catch((e: Error) => bail(e.message || "Could not start the session"));
     } catch (e) {
       setError((e as Error).message || "Could not start the session");
       setStage("idle");
-      sessionRef.current?.stop().catch(() => {});
+      teardown(sessionRef.current);
       sessionRef.current = null;
     }
-  }, [startRender]);
+  }, [startRender, teardown]);
 
   useEffect(() => {
     // Best-effort stop when the tab closes/reloads — otherwise the server
     // session lives on (and consumes credits) until max_session_duration.
-    const onPageHide = () => sessionRef.current?.stop().catch(() => {});
+    const onPageHide = () => teardown(sessionRef.current);
     window.addEventListener("pagehide", onPageHide);
     return () => {
       window.removeEventListener("pagehide", onPageHide);
       stopRender();
-      sessionRef.current?.stop().catch(() => {});
+      teardown(sessionRef.current);
     };
-  }, []);
+  }, [teardown]);
 
   return (
     <div className="absolute inset-0 z-10">
-      {/* Hidden source video (green screen) — the canvas shows the keyed result */}
-      <video ref={videoRef} autoPlay playsInline muted={false} className="hidden" />
+      {/* Source video (green screen) — invisible but NOT display:none. The SDK's
+          LiveKit room uses adaptiveStream, which pauses video delivery entirely
+          for hidden/zero-size elements; opacity keeps frames (and audio) flowing
+          while the canvas shows the keyed result. */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted={false}
+        className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
+      />
 
       {/* Keyed avatar, standing on the store floor */}
       <div className="absolute inset-0 flex items-end justify-center overflow-hidden">
