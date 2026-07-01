@@ -5,10 +5,11 @@ export const metadata: Metadata = {
   description: "Live in-store associate avatar, standing on the Coach floor in Las Vegas.",
 };
 
-// Reuses the LiveAvatar embed Matt provided, flipped to portrait (9:16).
-// orientation=vertical is the only change from the horizontal snippet.
-const AVATAR_ID = "a4b14ad2-bf9a-4d93-aa0f-7a9e903313cb";
-const EMBED_SRC = `https://embed.liveavatar.com/v1/${AVATAR_ID}?orientation=vertical`;
+// LiveAvatar embed (portrait 9:16), minted via the API for avatar
+// ab0765ad-69de-41fb-9f8a-bd01c3c52d6f with June voice + the Coach context bound in.
+// To swap the look/outfit later: create a new embed for the new avatar and drop its id here.
+const EMBED_ID = "c85b4861-02de-4734-b106-0e233dd7f543";
+const EMBED_SRC = `https://embed.liveavatar.com/v1/${EMBED_ID}?orientation=vertical`;
 
 const STORE_IMAGE = "/backgrounds/coach-store-vegas.jpg";
 
