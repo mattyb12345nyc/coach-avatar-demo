@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { KeynoteGate } from "@/components/keynote/KeynoteGate";
 import { KeynoteStage } from "@/components/keynote/KeynoteStage";
 
 export const metadata: Metadata = {
@@ -12,7 +13,8 @@ const STORE_IMAGE = "/backgrounds/coach-store-vegas.jpg";
 
 export default function KeynotePage() {
   return (
-    <main className="relative min-h-[100svh] w-full overflow-hidden bg-coach-black">
+    <KeynoteGate>
+      <main className="relative min-h-[100svh] w-full overflow-hidden bg-coach-black">
       {/* Store backdrop */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -33,7 +35,8 @@ export default function KeynotePage() {
         </p>
       </header>
 
-      <KeynoteStage />
-    </main>
+        <KeynoteStage />
+      </main>
+    </KeynoteGate>
   );
 }
