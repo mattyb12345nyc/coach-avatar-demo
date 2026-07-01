@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Mic, Trophy, SlidersHorizontal, BookOpen, Lock, ArrowUpRight } from "lucide-react";
+import { Mic, Trophy, SlidersHorizontal, BookOpen, Lock, ArrowUpRight, UserRound } from "lucide-react";
 
 // Password gate for the staff entry page. The page is a directory of every
 // surface in the SMC game site. The individual pages (leaderboard, guide) are
@@ -83,6 +83,12 @@ export function EntryPage() {
             title="Role-Play Room"
             staff
             desc="The single room screen. Pick team + language, run the 3 voice personas (4-min cap, keep or retry — best take counts), then the team summary. Full-screen on the room laptop, mouse-driven."
+          />
+          <Card
+            href="/keynote"
+            icon={UserRound}
+            title="Keynote Avatar"
+            desc="Joon's live avatar in vertical 9:16 over the Coach store — tap Chat now to talk to her. Built for the keynote screen."
           />
           <Card
             href="/leaderboard"
